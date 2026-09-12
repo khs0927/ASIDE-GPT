@@ -1,7 +1,7 @@
 export type BrowserProviderId = "aside-remote" | "work-native" | "future-provider";
 
 export type BrowserProviderStatus =
-  | "official-access-required"
+  | "channel-transport-available"
   | "available-by-host"
   | "not-implemented";
 
@@ -21,10 +21,10 @@ export const BROWSER_PROVIDERS: Readonly<Record<BrowserProviderId, BrowserProvid
     role: "primary",
     execution: "aside-official-remote",
     performsAsideExecution: true,
-    callableFromAsideGpt: false,
-    status: "official-access-required",
+    callableFromAsideGpt: true,
+    status: "channel-transport-available",
     notes:
-      "Aside officially advertises Channels (Remote control), Cloud handoff, and team browser-agent runs started from apps/cron/internal tools. The public endpoint/auth/schema is not currently documented, so ASIDE-GPT must wait for the official access contract instead of inventing one.",
+      "Aside officially supports Channels remote control over Slack and Telegram. ChatGPT can send/read Slack through its connected Slack plugin, so Channels provides a supported transport without inventing a private Aside API. Per-user readiness still requires a verified Aside-connected Slack conversation and a live no-PC Cloud handoff smoke test.",
   },
   "work-native": {
     id: "work-native",
@@ -55,7 +55,6 @@ export interface ProviderSelectionOptions {
 export interface ProviderSelection {
   provider: BrowserProviderInfo;
   ready: boolean;
-  blockedReason?: "official-aside-access-required" | undefined;
   fallbackUsed: boolean;
 }
 
@@ -74,7 +73,6 @@ export function selectBrowserProvider(options: ProviderSelectionOptions = {}): P
   return {
     provider: aside,
     ready: aside.callableFromAsideGpt,
-    blockedReason: aside.callableFromAsideGpt ? undefined : "official-aside-access-required",
     fallbackUsed: false,
   };
 }
