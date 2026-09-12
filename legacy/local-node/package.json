@@ -1,0 +1,17 @@
+{
+  "name": "aside-gpt",
+  "version": "0.1.0",
+  "private": true,
+  "workspaces": [
+    "apps/*"
+  ],
+  "scripts": {
+    "build": "npm run build -w @aside-gpt/gateway && npm run build -w @aside-gpt/node",
+    "typecheck": "npm run typecheck -w @aside-gpt/gateway && npm run typecheck -w @aside-gpt/node",
+    "dev:gateway": "npm run dev -w @aside-gpt/gateway",
+    "dev:node": "npm run dev -w @aside-gpt/node"
+  },
+  "engines": {
+    "node": ">=22"
+  }
+}
