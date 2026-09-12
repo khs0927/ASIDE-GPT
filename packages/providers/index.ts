@@ -50,6 +50,10 @@ export const BROWSER_PROVIDERS: Readonly<Record<BrowserProviderId, BrowserProvid
   },
 };
 
+type ProviderById<T extends BrowserProviderId> = BrowserProviderInfo & { id: T };
+
+export function selectBrowserProvider(): ProviderById<"aside-official-remote">;
+export function selectBrowserProvider<T extends BrowserProviderId>(preferred: T): ProviderById<T>;
 export function selectBrowserProvider(
   preferred: BrowserProviderId = "aside-official-remote",
 ): BrowserProviderInfo {
