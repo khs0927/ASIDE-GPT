@@ -18,7 +18,7 @@ test("does not silently replace Aside for a GitHub browser task", () => {
   assert.equal(route.asideExecution, true);
 });
 
-test("allows Work-native only after explicit fallback opt-in", () => {
+test("allows Work-native only after explicit fallback opt-in when Aside is unavailable", () => {
   const route = chooseExecutor({
     request: "네이버에서 주문 배송상태 확인해줘.",
     allowNonAsideFallback: true,
@@ -30,18 +30,37 @@ test("allows Work-native only after explicit fallback opt-in", () => {
   assert.equal(route.fallback, "work-native-browser");
 });
 
-test("blocked Aside plan explains the official-access boundary", () => {
+test("connected Aside adapter wins even when fallback permission exists", () => {
+  const route = chooseExecutor({
+    request: "네이버에서 주문 배송상태 확인해줘.",
+    asideRemoteAvailable: true,
+    allowNonAsideFallback: true,
+  });
+  assert.equal(route.executor, "aside_remote_browser");
+  assert.equal(route.browserProvider, "aside-remote");
+  assert.equal(route.asideExecution, true);
+  assert.equal(route.ready, true);
+});
+
+test("blocked Aside plan stops before confirmation, verification and evidence", () => {
   const plan = planTask({ request: "지난달 결제한 SaaS 가격을 여러 사이트에서 비교해줘." });
   assert.equal(plan.route.executor, "aside_remote_browser");
   assert.equal(plan.policy.taskClass, "READ");
   assert.equal(plan.mustPauseBeforeAction, false);
   assert.match(plan.steps.find((step) => step.id === "execute")?.instruction ?? "", /official-aside-access-required/);
-  assert.ok(plan.steps.some((step) => step.kind === "evidence"));
+  assert.equal(plan.steps.some((step) => step.kind === "confirm"), false);
+  assert.equal(plan.steps.some((step) => step.kind === "verify"), false);
+  assert.equal(plan.steps.some((step) => step.kind === "evidence"), false);
 });
 
-test("adds an approval step for an external effect", () => {
-  const plan = planTask({ request: "배송지를 입력하고 주문을 제출해줘." });
+test("connected Aside plan adds approval and evidence stages for an external effect", () => {
+  const plan = planTask({
+    request: "배송지를 입력하고 주문을 제출해줘.",
+    asideRemoteAvailable: true,
+  });
   assert.equal(plan.policy.taskClass, "EXTERNAL_EFFECT");
   assert.equal(plan.mustPauseBeforeAction, true);
   assert.ok(plan.steps.some((step) => step.id === "confirm"));
+  assert.ok(plan.steps.some((step) => step.id === "verify"));
+  assert.ok(plan.steps.some((step) => step.id === "evidence"));
 });

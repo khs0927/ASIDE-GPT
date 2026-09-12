@@ -49,6 +49,7 @@ export const BROWSER_PROVIDERS: Readonly<Record<BrowserProviderId, BrowserProvid
 
 export interface ProviderSelectionOptions {
   allowNonAsideFallback?: boolean | undefined;
+  asideRemoteAvailable?: boolean | undefined;
   preferred?: BrowserProviderId | undefined;
 }
 
@@ -71,10 +72,11 @@ export function selectBrowserProvider(options: ProviderSelectionOptions = {}): P
   }
 
   const aside = BROWSER_PROVIDERS["aside-remote"];
+  const ready = options.asideRemoteAvailable === true;
   return {
     provider: aside,
-    ready: aside.callableFromAsideGpt,
-    blockedReason: aside.callableFromAsideGpt ? undefined : "official-aside-access-required",
+    ready,
+    blockedReason: ready ? undefined : "official-aside-access-required",
     fallbackUsed: false,
   };
 }
