@@ -1,17 +1,21 @@
 {
   "name": "aside-gpt",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
-  "workspaces": [
-    "apps/*"
-  ],
+  "description": "Mobile-only ChatGPT Work skills and browser-task policies.",
   "scripts": {
-    "build": "npm run build -w @aside-gpt/gateway && npm run build -w @aside-gpt/node",
-    "typecheck": "npm run typecheck -w @aside-gpt/gateway && npm run typecheck -w @aside-gpt/node",
-    "dev:gateway": "npm run dev -w @aside-gpt/gateway",
-    "dev:node": "npm run dev -w @aside-gpt/node"
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "test": "node --import tsx --test tests/*.test.ts",
+    "check:skills": "node --import tsx scripts/validate-skills.ts",
+    "ci": "npm run typecheck && npm test && npm run check:skills && npm run build"
   },
   "engines": {
     "node": ">=22"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
   }
 }

@@ -1,80 +1,48 @@
 # ASIDE-GPT
 
-Mobile-first browser automation for ChatGPT, powered by a trusted Aside execution node.
+ASIDE-GPT turns ChatGPT Work into a mobile-first browser-automation control plane. No user PC, local browser, home server, or persistent desktop process is required for supported Work tasks.
 
-## Goal
+The user starts a task from ChatGPT on an iPhone or Android device. ChatGPT Work plans the task, selects a connected app or its native cloud browser, pauses for sign-in or confirmation when needed, and returns verifiable evidence. ASIDE-GPT contributes the workflow skills, routing rules, safety policies, approval boundaries, and result schemas that guide that work.
 
-Use **ChatGPT on mobile as the control surface** for browser automation. The phone never needs to run a browser automation engine or a local MCP process. ChatGPT calls a remote MCP gateway; a trusted execution node with the Aside CLI/browser installed performs the work and returns the result.
-
-```text
-ChatGPT mobile
-      |
-      | HTTPS / MCP
-      v
-ASIDE-GPT Gateway
-      |
-      | outbound-safe task channel
-      v
-ASIDE-GPT Node Agent
-      |
-      | local CLI
-      v
-Aside CLI + Aside Browser
-      |
-      v
-Logged-in websites
+```mermaid
+flowchart TD
+    M[ChatGPT Mobile] --> W[ChatGPT Work]
+    S[ASIDE-GPT skills and policies] -. guides .-> W
+    W --> A[Connected Plugins or Apps]
+    W --> B[Native Work Cloud Browser]
+    A --> R[Remote Web Services]
+    B --> R
 ```
 
-## Why this architecture
+The cloud browser is a Work-native execution capability. This repository does not invent or call a private “Cloud Browser API,” and it does not require a local MCP gateway to reach one. When a connected app can perform the operation, Work should use that app first; when general web interaction is needed, Work should use its native cloud browser; some tasks need both.
 
-`aside mcp` is a local stdio MCP surface. A mobile ChatGPT client cannot spawn that process on another machine. ASIDE-GPT therefore separates the public ChatGPT-facing MCP endpoint from the private machine that owns the browser session.
+## What is included
 
-The node agent only makes outbound HTTPS requests to the gateway, so the machine running Aside does not need an inbound port or router configuration.
+- `skills/`: OpenAI-style `SKILL.md` workflow skills for browser tasks, research, authenticated sites, shopping, and multi-site work.
+- `packages/`: deterministic TypeScript policies, schemas, evidence validation, approval boundaries, provider catalog, and routing helpers. These helpers do not launch a browser.
+- `plugin/manifest.json`: skills-only package metadata. No custom MCP endpoint is declared.
+- `providers/`: the provider boundary. `work-native` is the default logical provider; Aside hosted execution is explicitly unverified and has no adapter.
+- `docs/`: architecture, mobile-only constraints, Work integration, security, approvals, evidence, provider decisions, and research records.
+- `legacy/local-node/`: the previous gateway/node implementation retained for historical reference and excluded from the active package and CI path.
 
-## MVP scope
-
-- Remote MCP endpoint for ChatGPT
-- `browser_run_task` for agentic browser work
-- `browser_continue_task` for continuing an Aside session
-- `browser_node_status` for checking whether a trusted execution node is online
-- Outbound-polling node agent that invokes the local Aside CLI
-- Shared-secret authentication between gateway and node
-- Conservative timeouts and redacted logs
-- No credential/cookie extraction APIs
-- No raw arbitrary shell tool exposed to ChatGPT
-
-## Security boundary
-
-ASIDE-GPT does **not** bypass Aside's own confirmation or credential protections. Sensitive actions such as payments, posts, messages, account/security changes, and other consequential actions must remain approval-gated by the execution environment.
-
-Do not expose cookies, passwords, passkeys, browser-profile files, or raw credentials through MCP tool results.
-
-## Repository layout
-
-```text
-apps/
-  gateway/    Remote MCP + task broker
-  node/       Trusted node agent that runs Aside locally
-docs/
-  ARCHITECTURE.md
-```
-
-## Quick start (development)
+## Quick checks
 
 ```bash
 npm install
-cp .env.example .env
-npm run dev:gateway
-# in another terminal on the machine that has Aside installed
-npm run dev:node
+npm run ci
 ```
 
-The gateway is designed to be exposed through HTTPS and connected to ChatGPT as a remote MCP server. For production, put it behind TLS and replace the MVP in-memory broker with a durable store before relying on long-running tasks.
+There is no active runtime service, required environment variable, heartbeat, tunnel, local CLI, or desktop process. The package is installed or imported through the supported ChatGPT Work/plugin workflow, subject to the account and workspace features available to the user.
 
-## Development status
+## Typical mobile requests
 
-Initial mobile-first scaffold. The first implementation targets one persistent gateway process and one trusted Aside node. Durable queues, multi-node routing, OAuth and deployment automation follow after the local Aside CLI contract is smoke-tested.
+- “네이버에서 주문 배송상태 확인해줘.”
+- “GitHub Actions 실패한 이유를 확인하고, 안전하게 고칠 수 있는 부분을 정리해줘.”
+- “여러 사이트에서 이 상품 가격을 비교하고 가장 좋은 조건을 알려줘.”
+- “관리 페이지를 확인해서 보고서를 만들어줘. 제출 직전에는 승인 받아.”
 
-## Upstream
+Read-only work can proceed automatically when Work allows it. State-changing work pauses at the policy boundary, and externally consequential actions such as sending, publishing, purchasing, deleting, or transferring money require explicit confirmation through the host product’s confirmation flow.
 
-ASIDE-GPT is an independent integration project. Aside is a separate product/service. This project uses its documented developer surfaces (CLI/MCP/REPL) rather than copying the proprietary Aside browser implementation.
+## Scope and limitations
+
+This repository defines how Work should reason about and report browser tasks; it is not a replacement browser and it is not a general-purpose remote-computer service. Work’s native browser, connected apps, authentication UI, confirmation UI, rollout, and site compatibility remain controlled by ChatGPT. See [docs/WORK_INTEGRATION.md](docs/WORK_INTEGRATION.md), [docs/PROVIDERS.md](docs/PROVIDERS.md), and [docs/OPENAI_RESEARCH.md](docs/OPENAI_RESEARCH.md).

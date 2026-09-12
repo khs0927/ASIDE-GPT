@@ -2,20 +2,22 @@ name: CI
 
 on:
   push:
-    branches: [main]
   pull_request:
 
+permissions:
+  contents: read
+
 jobs:
-  build:
+  verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - name: Check out repository
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
           node-version: 22
       - name: Install dependencies
-        run: npm install
-      - name: Typecheck
-        run: npm run typecheck
-      - name: Build
-        run: npm run build
+        run: npm install --no-audit --no-fund
+      - name: Run verification suite
+        run: npm run ci
