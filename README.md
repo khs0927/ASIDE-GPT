@@ -45,6 +45,12 @@ See [the candidate comparison and architecture](docs/OPEN_SOURCE_FUSION.md) and
 [runtime API and limitations](docs/RUNTIME.md). Playwright, Browser Use and other
 independent agents are not installed as substitute production executors.
 
+The [sequential development plan](docs/DEVELOPMENT_PLAN.md) records completed
+library stages and remaining vendor/mobile release gates. The task dispatcher
+now supports single submission claims, bounded waits, read-only reconciliation
+and provider-event binding. Its default provider remains unavailable; tests use
+fixtures, not real Aside execution.
+
 ## Success criterion
 
 A task counts as **ASIDE-GPT execution** only when the actual browser work is performed by Aside.

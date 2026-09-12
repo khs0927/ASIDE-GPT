@@ -50,3 +50,11 @@ verification, screenshot storage/redaction, evidence freshness policy, schema
 migrations, retention, deletion and a production deployment remain outstanding.
 The test suite uses fixture events only and does not contact Aside or prove
 mobile end-to-end automation.
+
+## Submission and recovery service
+
+`runtime/dispatcher.ts` adds a bounded submission/reconciliation service with an
+injected internal provider port. The default port is unavailable. It has no
+background scheduler or HTTP listener, and does not implement the official Aside
+adapter. See [the sequential development gates](DEVELOPMENT_PLAN.md) for its
+concurrency behavior, timeout semantics and production acceptance requirements.

@@ -6,3 +6,4 @@ export * from "./providers/index.js";
 export * from "./schemas/index.js";
 export * from "./integration/index.js";
 export * from "./runtime/index.js";
+export * from "./runtime/dispatcher.js";
