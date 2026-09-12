@@ -7,8 +7,8 @@ const EXTERNAL_EFFECT_PATTERNS: readonly RegExp[] = [
 ];
 
 const WRITE_PATTERNS: readonly RegExp[] = [
-  /\b(fill|write|draft|edit|update|change|save|add|upload|configure)\b/i,
-  /(작성|입력|폼|수정|변경|저장|추가|업로드|설정|장바구니)/u,
+  /\b(fill|write|draft|edit|update|change|save|add|upload|configure|fix|apply|repair)\b/i,
+  /(작성|입력|폼|수정|변경|저장|추가|업로드|설정|장바구니|해결해|해결하|고쳐|고치|반영해|처리해)/u,
 ];
 
 const CRITICAL_PATTERNS: readonly RegExp[] = [

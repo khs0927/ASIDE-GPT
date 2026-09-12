@@ -19,6 +19,12 @@ test("classifies form entry as WRITE", () => {
   assert.equal(policy.confirmation, "before_write");
 });
 
+test("classifies an imperative fix request as WRITE", () => {
+  const policy = classifyTask("GitHub Actions 실패 원인을 확인하고 해결 가능한 부분은 처리해줘.");
+  assert.equal(policy.taskClass, "WRITE");
+  assert.equal(policy.confirmation, "before_write");
+});
+
 test("classifies purchase as critical EXTERNAL_EFFECT", () => {
   const policy = classifyTask("이 상품을 구매하고 결제해줘.");
   assert.equal(policy.taskClass, "EXTERNAL_EFFECT");
