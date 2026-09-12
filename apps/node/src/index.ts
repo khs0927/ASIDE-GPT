@@ -3,7 +3,7 @@ import { config } from './config.js';
 
 const headers = {
   'content-type': 'application/json',
-  'x-aside-gpt-secret': config.sharedSecret,
+  'x-aside-gpt-secret': config.nodeSecret,
 };
 
 let stopped = false;
@@ -24,7 +24,7 @@ async function heartbeat(version: string | undefined): Promise<void> {
 async function nextTask(): Promise<RemoteTask | undefined> {
   const response = await fetch(`${config.gatewayUrl}/api/nodes/${encodeURIComponent(config.nodeId)}/tasks/next`, {
     method: 'GET',
-    headers: { 'x-aside-gpt-secret': config.sharedSecret },
+    headers: { 'x-aside-gpt-secret': config.nodeSecret },
   });
   if (response.status === 204) return undefined;
   if (!response.ok) throw new Error(`task poll failed: HTTP ${response.status}`);
