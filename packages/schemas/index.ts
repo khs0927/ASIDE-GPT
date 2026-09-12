@@ -14,8 +14,10 @@ export type ConfirmationMode = (typeof CONFIRMATION_MODES)[number];
 
 export const EXECUTORS = [
   "connected_app",
+  "aside_remote",
   "work_native_browser",
   "hybrid",
+  "blocked",
 ] as const;
 export type Executor = (typeof EXECUTORS)[number];
 
@@ -26,9 +28,16 @@ export type ConfirmationStatus =
   | "declined"
   | "not_applicable";
 
+export type BrowserPreference = "aside" | "work";
+
 export interface TaskRequest {
   request: string;
   availableApps?: readonly string[];
+  browserPreference?: BrowserPreference;
+  /** True only when an official Aside remote surface is actually connected/authorized. */
+  asideRemoteAvailable?: boolean;
+  /** Explicit user opt-in to substitute ChatGPT Work's browser when Aside remote is unavailable. */
+  allowWorkFallback?: boolean;
 }
 
 export interface TaskPolicy {
@@ -41,8 +50,8 @@ export interface TaskPolicy {
 export interface RouteDecision {
   executor: Executor;
   appHint?: string;
-  browserProvider: "work-native";
-  fallback: "work-native-browser" | "ask-user";
+  browserProvider: "aside-official-remote" | "work-native";
+  fallback: "work-native-browser" | "ask-user" | "none";
   reason: string;
 }
 
