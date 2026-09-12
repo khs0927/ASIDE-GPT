@@ -39,7 +39,8 @@ The adapter must not implement its own browser automation engine.
 
 ## Approvals and credentials
 
-- Preserve Aside's own approval boundary for payments, messages, posts, account/security changes, and other consequential actions.
+- Preserve Aside's own approval and confirmation boundary for payments, messages, posts, account/security changes, and other consequential actions.
+- If the official Aside surface requests confirmation, relay that state to the user and resume only after an explicit supported approval.
 - Never ask the user to paste passwords, OTPs, cookies, session tokens, API secrets, card data, or recovery codes into chat.
 - Use only official authentication/authorization mechanisms supplied by Aside.
 
