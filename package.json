@@ -2,7 +2,7 @@
   "name": "aside-gpt",
   "version": "0.2.0",
   "private": true,
-  "description": "Mobile-only ChatGPT Work skills and browser-task policies.",
+  "description": "Aside-first mobile connector, policy, and durable task runtime.",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -11,7 +11,11 @@
     "ci": "npm run typecheck && npm test && npm run check:skills && npm run build"
   },
   "engines": {
-    "node": ">=22"
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "xstate": "5.32.6",
+    "zod": "4.6.2"
   },
   "devDependencies": {
     "@types/node": "^22.0.0",
