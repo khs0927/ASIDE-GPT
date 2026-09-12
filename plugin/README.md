@@ -1,5 +1,15 @@
 # Plugin package
 
-This is a skills-only plugin package. The manifest points at this package’s `skills/` directory and intentionally declares no custom MCP server: ASIDE-GPT does not need a server to invoke the native Work cloud browser, and no private browser API is assumed.
+This is currently a skills/policy package for connecting mobile ChatGPT workflows to the **official Aside remote browser-agent surface** when that surface is available to the user's account.
 
-Use the current ChatGPT plugin directory/submission flow when installing or publishing this package. Availability of Work, connected apps, cloud-browser execution, sign-in, and confirmations is controlled by the host product and the user’s account/workspace.
+It intentionally declares no fabricated MCP endpoint. The public Aside docs reviewed for this repository do not currently publish the generic remote URL/auth/schema for the commercial Channels / Cloud handoff / external agent-run capabilities.
+
+The skills enforce these rules:
+
+- Aside is the primary browser provider.
+- A browser task runs through Aside only when an official authorized remote surface is actually connected.
+- Missing Aside access produces an explicit blocked/access-required state.
+- Work Browser or another provider is used only after explicit user opt-in as a non-Aside fallback.
+- Credentials and private endpoints are never invented or collected through chat.
+
+When Aside exposes an official remote MCP/API/Channel contract suitable for third-party clients, the plugin can add the thin live-action connector without changing the provider policy.
