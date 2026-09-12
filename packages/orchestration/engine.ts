@@ -210,7 +210,8 @@ export class AsideOrchestrator {
   async respond(runId: string, response: AsideRemoteUserResponse): Promise<OrchestrationSyncResult> {
     const adapter = this.requireAdapter();
     let current = this.ledger.get(this.tenant, runId);
-    if (!current.vendorRunId) throw new Error("Run has no provider task identifier");
+    const vendorRunId = current.vendorRunId;
+    if (!vendorRunId) throw new Error("Run has no provider task identifier");
 
     if (current.state === "waiting_signin") {
       throw new Error("Sign-in must be completed through the official secure Aside authorization UI; chat input is not accepted");
@@ -230,12 +231,12 @@ export class AsideOrchestrator {
 
     let remoteState: AsideRemoteTaskState;
     try {
-      remoteState = await adapter.respondToInput(current.vendorRunId, response);
+      remoteState = await adapter.respondToInput(vendorRunId, response);
     } catch {
       return {
         record: current,
         remoteState: {
-          taskId: current.vendorRunId,
+          taskId: vendorRunId,
           status: "waiting_for_user",
           message: "Provider response delivery is uncertain; reconcile before retrying.",
         },
@@ -243,25 +244,27 @@ export class AsideOrchestrator {
       };
     }
 
-    this.assertTaskIdentity(current.vendorRunId, remoteState);
+    this.assertTaskIdentity(vendorRunId, remoteState);
     return this.applyAcknowledgement(runId, current, remoteState);
   }
 
   async cancel(runId: string): Promise<OrchestrationSyncResult> {
     const adapter = this.requireAdapter();
     const current = this.ledger.get(this.tenant, runId);
-    if (!current.vendorRunId) throw new Error("Run has no provider task identifier");
-    const remoteState = await adapter.cancelTask(current.vendorRunId);
-    this.assertTaskIdentity(current.vendorRunId, remoteState);
+    const vendorRunId = current.vendorRunId;
+    if (!vendorRunId) throw new Error("Run has no provider task identifier");
+    const remoteState = await adapter.cancelTask(vendorRunId);
+    this.assertTaskIdentity(vendorRunId, remoteState);
     return this.applyAcknowledgement(runId, current, remoteState);
   }
 
   async result(runId: string): Promise<AsideRemoteTaskResult> {
     const adapter = this.requireAdapter();
     const current = this.ledger.get(this.tenant, runId);
-    if (current.state !== "completed" || !current.vendorRunId) throw new Error("Run is not completed");
-    const result = await adapter.getResult(current.vendorRunId);
-    if (result.taskId !== current.vendorRunId) throw new Error("Provider result task mismatch");
+    const vendorRunId = current.vendorRunId;
+    if (current.state !== "completed" || !vendorRunId) throw new Error("Run is not completed");
+    const result = await adapter.getResult(vendorRunId);
+    if (result.taskId !== vendorRunId) throw new Error("Provider result task mismatch");
     return result;
   }
 
