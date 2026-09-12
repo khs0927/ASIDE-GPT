@@ -4,18 +4,19 @@
 
 **Official remote/cloud product capability: VERIFIED.**
 
-**Public developer API / Remote MCP contract for direct ChatGPT integration: NOT PUBLICLY VERIFIED.**
+**Official mobile command transport via Channels: VERIFIED.**
 
-This replaces the earlier blanket `UNSUPPORTED` conclusion.
+**PC-free Cloud handoff execution with every user device offline: REQUIRES LIVE VERIFICATION.**
+
+**Public direct developer API / hosted Remote MCP: NOT PUBLICLY VERIFIED, but no longer required for the preferred Channels/Slack path.**
 
 ## Product goal
 
-ASIDE-GPT must not replace Aside with another browser engine. The success path is:
-
 ```text
 ChatGPT Mobile
-  -> minimal ASIDE-GPT connector
-  -> official Aside remote/cloud execution surface
+  -> ChatGPT Slack connector
+  -> verified Slack conversation connected to Aside Channels
+  -> Aside Cloud handoff
   -> Aside Browser Agent
   -> websites
 ```
@@ -26,93 +27,97 @@ The browser work must be executed by Aside.
 
 ### Aside pricing
 
-The official Aside pricing page currently advertises:
+The official Aside pricing page advertises:
 
 - Pro: `Channels (Remote control)`
 - Pro: `Cloud handoff`
-- Team/contact-sales offering: `Start browser agent runs from your app, cron jobs, or internal tools.`
+- Team/contact-sales: `Start browser agent runs from your app, cron jobs, or internal tools.`
 - Team controls for shared browser profiles, browser state, vaults, and approved team logins.
 
 Source: https://aside.com/pricing
 
-These claims establish that remote control, cloud handoff, and programmatic triggering of browser-agent runs exist as supported product capabilities at some plan/access levels.
+### Aside Channels
+
+The official component changelog documents Channels remote control over **Slack and Telegram**, guided connection settings, durable delivery, and Telegram chat commands for session control. Later fixes cover reliable mid-run channel delivery and suspension prompts.
+
+Source: https://docs.aside.com/changelog/components
+
+This creates a supported product transport that ChatGPT can reach through its Slack connector without fabricating an Aside HTTP API.
 
 ### Aside public developer docs
 
-The public developer page documents local developer surfaces:
+The public developer page separately documents local developer surfaces:
 
 - `aside "..."`
 - `aside --session ...`
 - `aside mcp`
 - `aside repl`
 
-The MCP example is a local stdio process using `command: "aside"` and `args: ["mcp"]`.
+The MCP example remains a local stdio process using `command: "aside"` and `args: ["mcp"]`.
 
 Source: https://docs.aside.com/help/developers
 
-This public page does **not** document the remote/cloud endpoint, task API, authentication scheme, approval callback, or result API needed for a direct ChatGPT connector.
+These local surfaces are not required by the target Channels path.
 
-### Aside docs index
+### Cloud/device evidence
 
-The current public Help Center index does not list dedicated pages for Channels, Cloud handoff, a remote task API, or an externally callable hosted Aside MCP.
+The official changelog includes device management for active cloud devices. The pricing page separately advertises `Cloud handoff`.
 
-Source: https://docs.aside.com/llms.txt
+Those facts support a cloud execution/handoff product surface, but the exact no-PC semantics must be proven with a live account test rather than inferred from the word `cloud`.
 
-### Aside changelog
+## Registry and Plugin Directory checks
 
-The official changelog includes `Device management`, described as showing active cloud devices and allowing a remote device to be signed out. It also documents profile routing, task approvals, and authenticated HTTP MCP connectors.
+- HAPI MCP Registry search for `aside`: no public Aside server found on 2026-09-12.
+- ChatGPT Plugin Directory search: no official Aside plugin found on 2026-09-12.
+- ChatGPT Slack integration: send/read capabilities are available, making Slack the preferred inter-product bridge.
 
-Source: https://docs.aside.com/changelog/components
-
-`authenticated HTTP connectors` must not be interpreted as an Aside-hosted remote MCP without separate documentation; it may describe Aside acting as an MCP client.
-
-## Registry check
-
-A search of the HAPI MCP Registry for `aside` returned no publicly registered Aside server on 2026-09-12.
-
-This does not disprove Aside remote execution because the official pricing page advertises remote/cloud capabilities, but it means a public registry URL cannot currently be used as the connector endpoint.
+A missing direct Aside plugin or registry MCP does not block the Channels/Slack route.
 
 ## Capability matrix
 
 | Capability | Status | Evidence |
 | --- | --- | --- |
 | Aside performs browser-agent work | VERIFIED | Official product + developer docs |
-| Channels / remote control | VERIFIED PRODUCT FEATURE | Official pricing |
+| Channels remote control | VERIFIED | Official pricing + changelog |
+| Channels over Slack | VERIFIED | Official changelog |
+| Channels over Telegram | VERIFIED | Official changelog |
+| Durable Channel delivery | VERIFIED | Official changelog |
+| Telegram session-control commands | VERIFIED | Official changelog |
+| ChatGPT can send/read Slack | VERIFIED PRODUCT SURFACE | Connected Slack integration capabilities |
 | Cloud handoff | VERIFIED PRODUCT FEATURE | Official pricing |
-| Start browser-agent runs from app/cron/internal tools | VERIFIED PRODUCT FEATURE | Official pricing, team/contact-sales |
 | Cloud device concept | VERIFIED | Official changelog |
+| Start browser-agent runs from app/cron/internal tools | VERIFIED PRODUCT FEATURE | Official team/contact-sales pricing |
 | Local CLI / MCP / REPL | VERIFIED | Public developer docs |
-| Public remote HTTP task endpoint | NOT PUBLICLY VERIFIED | Not present in public docs index |
-| Public hosted Aside MCP endpoint | NOT PUBLICLY VERIFIED | No public docs; HAPI registry search empty |
-| OAuth/authentication contract for external task submission | NOT PUBLICLY VERIFIED | No public contract found |
-| Remote task-status API | NOT PUBLICLY VERIFIED | No public contract found |
-| Remote approval/resume API | NOT PUBLICLY VERIFIED | No public contract found |
-| Remote screenshot/result API | NOT PUBLICLY VERIFIED | No public contract found |
-| Direct ChatGPT Plugin -> Aside Remote wiring | BLOCKED ON OFFICIAL ACCESS CONTRACT | Must not invent endpoints |
-
-## Required official contract
-
-To activate the thin connector we need only the supported Aside integration surface, not a new browser runtime. The minimum contract is:
-
-1. Official remote task-submission entry point.
-2. Supported authentication / OAuth mechanism.
-3. Task/run identifier and status lookup or event stream.
-4. Follow-up / steering or continuation method.
-5. Approval-required event and approve/deny/resume flow.
-6. Result retrieval, including links/screenshots/artifacts where supported.
-7. Clarification whether Pro `Channels` can receive programmatic requests from ChatGPT or whether the team/API offering is required.
-8. Clarification whether `Cloud handoff` can create/continue a browser run with no local device online.
+| Public direct HTTP task API | NOT PUBLICLY VERIFIED | No public contract found |
+| Public hosted Aside MCP | NOT PUBLICLY VERIFIED | No public docs; HAPI search empty |
+| Aside official ChatGPT plugin | NOT FOUND | Plugin Directory search |
+| Slack Channels bridge from ChatGPT | ARCHITECTURALLY SUPPORTED | Both products expose supported Slack surfaces |
+| Browser execution with every local user device offline | LIVE TEST REQUIRED | Must not infer from pricing alone |
+| Approval round trip through Channels | LIVE TEST REQUIRED | Product supports approvals/channel delivery; exact account flow must be exercised |
 
 ## Architecture decision
 
-Aside Remote is the **primary target provider**.
+`aside-remote` remains the primary provider.
 
-ChatGPT Work's native cloud browser may remain documented as a fallback/research path, but using it does not count as ASIDE-GPT success because the browser execution would not be performed by Aside.
+The preferred transport is now `channels-slack`:
 
-No fake `ASIDE_REMOTE_URL`, undocumented endpoint, reverse-engineered private API, cookie extraction, or credential relay should be added.
+```text
+ChatGPT Mobile -> Slack -> Aside Channels -> Cloud handoff -> Aside Browser Agent
+```
 
-## Completion boundary
+A direct Aside API/Remote MCP remains a desirable future transport for the team programmatic-run capability but is not required to activate the Channels path.
 
-The repository can be completed up to the official integration boundary now: provider policy, capability detection, schemas, approvals, evidence requirements, docs, tests, and an access-request checklist.
+ChatGPT Work's native browser remains an explicit non-Aside fallback only. It does not count as ASIDE-GPT success.
 
-Actual end-to-end Aside execution can only be enabled when the official remote integration contract is supplied by Aside or becomes publicly documented.
+## Remaining completion boundary
+
+The code can model and enforce the supported transport now. Account-level production activation requires only:
+
+1. connect official Aside Channels to Slack;
+2. identify the verified Aside-connected Slack conversation from ChatGPT;
+3. run a harmless read-only task with all local Aside devices offline;
+4. prove Cloud handoff still executes the Aside browser task;
+5. prove a non-destructive question/approval round trip can be completed from mobile;
+6. record non-sensitive evidence.
+
+If that smoke test succeeds, the user’s PC-free requirement is met without a custom Aside API. If it fails because a local device is required, do not claim completion; pursue the team programmatic API/access path instead.
