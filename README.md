@@ -1,48 +1,101 @@
 # ASIDE-GPT
 
-ASIDE-GPT turns ChatGPT Work into a mobile-first browser-automation control plane. No user PC, local browser, home server, or persistent desktop process is required for supported Work tasks.
+ASIDE-GPT exists for one purpose: **use the official Aside Browser Agent from mobile ChatGPT without requiring the user's PC to stay online.**
 
-The user starts a task from ChatGPT on an iPhone or Android device. ChatGPT Work plans the task, selects a connected app or its native cloud browser, pauses for sign-in or confirmation when needed, and returns verifiable evidence. ASIDE-GPT contributes the workflow skills, routing rules, safety policies, approval boundaries, and result schemas that guide that work.
+It is not a new browser engine and it must not silently replace Aside with ChatGPT Work's browser.
 
 ```mermaid
 flowchart TD
-    M[ChatGPT Mobile] --> W[ChatGPT Work]
-    S[ASIDE-GPT skills and policies] -. guides .-> W
-    W --> A[Connected Plugins or Apps]
-    W --> B[Native Work Cloud Browser]
-    A --> R[Remote Web Services]
-    B --> R
+    M[ChatGPT Mobile] --> C[ASIDE-GPT thin connector]
+    C --> A[Official Aside remote/cloud control plane]
+    A --> B[Aside Browser Agent]
+    B --> W[Websites and logged-in services]
 ```
 
-The cloud browser is a Work-native execution capability. This repository does not invent or call a private “Cloud Browser API,” and it does not require a local MCP gateway to reach one. When a connected app can perform the operation, Work should use that app first; when general web interaction is needed, Work should use its native cloud browser; some tasks need both.
+## Current verified state
 
-## What is included
+Official Aside product material currently verifies remote/cloud capabilities:
 
-- `plugin/skills/`: OpenAI-style `SKILL.md` workflow skills for browser tasks, research, authenticated sites, shopping, and multi-site work.
-- `packages/`: deterministic TypeScript policies, schemas, evidence validation, approval boundaries, provider catalog, and routing helpers. These helpers do not launch a browser.
-- `plugin/manifest.json`: skills-only package metadata. No custom MCP endpoint is declared.
-- `providers/`: the provider boundary. `work-native` is the default logical provider; Aside hosted execution is explicitly unverified and has no adapter.
-- `docs/`: architecture, mobile-only constraints, Work integration, security, approvals, evidence, provider decisions, and research records.
-- `legacy/local-node/`: the previous gateway/node implementation retained for historical reference and excluded from the active package and CI path.
+- **Channels (Remote control)** on Pro.
+- **Cloud handoff** on Pro.
+- Team/contact-sales capability to **start browser agent runs from your app, cron jobs, or internal tools**.
+- The official changelog includes management of **active cloud devices**.
 
-## Quick checks
+Sources:
+
+- https://aside.com/pricing
+- https://docs.aside.com/changelog/components
+- https://docs.aside.com/help/developers
+
+What is **not yet publicly documented** is the external developer contract behind those remote/cloud features: endpoint or Remote MCP URL, authentication/OAuth schema, run-status contract, remote approvals, and result/artifact retrieval.
+
+For that reason ASIDE-GPT does not invent an API. The active provider state is `official-aside-access-required` until Aside publishes or grants the supported integration contract.
+
+See [docs/ASIDE_REMOTE_FEASIBILITY.md](docs/ASIDE_REMOTE_FEASIBILITY.md) and [docs/ASIDE_ACCESS_REQUEST.md](docs/ASIDE_ACCESS_REQUEST.md).
+
+## Success criterion
+
+A task counts as **ASIDE-GPT execution** only when the actual browser work is performed by Aside.
+
+```text
+Mobile ChatGPT
+  -> thin request/approval/result bridge
+  -> official Aside Remote / Channels / Cloud Handoff surface
+  -> Aside Browser Agent
+```
+
+Using another browser engine can be an explicitly requested fallback, but it must be labeled as non-Aside execution and does not satisfy the core project goal.
+
+## What is implemented
+
+- `packages/providers/`: Aside Remote is the primary target provider; silent replacement is prohibited.
+- `packages/orchestration/`: browser tasks route to Aside first and stop at `official-aside-access-required` when the official connector contract is unavailable.
+- `packages/policies/`: task risk and confirmation rules.
+- `packages/approvals/`: approval boundaries retained for consequential actions.
+- `packages/evidence/`: evidence requirements for completed browser work.
+- `plugin/skills/`: workflow skills that can be reused once the official Aside connector is activated.
+- `providers/aside/`: verified capability record and activation boundary.
+- `legacy/local-node/`: archived first prototype that required a PC/local Aside process. It is not part of the target architecture.
+
+## Explicitly not required by the target architecture
+
+```text
+NO user PC requirement
+NO localhost bridge
+NO home server
+NO personal tunnel
+NO local Aside CLI requirement
+NO replacement Playwright browser
+NO reverse-engineered Aside private API
+NO cookie/password extraction
+```
+
+## Verification
 
 ```bash
 npm install
 npm run ci
 ```
 
-There is no active runtime service, required environment variable, heartbeat, tunnel, local CLI, or desktop process. The package is installed or imported through the supported ChatGPT Work/plugin workflow, subject to the account and workspace features available to the user.
+The CI suite verifies that:
 
-## Typical mobile requests
+- Aside Remote remains the primary provider.
+- Work-native cannot be selected silently.
+- non-Aside fallback requires explicit opt-in.
+- unavailable official Aside access produces a blocked state instead of a fabricated endpoint.
+- approval and evidence policies continue to pass.
 
-- “네이버에서 주문 배송상태 확인해줘.”
-- “GitHub Actions 실패한 이유를 확인하고, 안전하게 고칠 수 있는 부분을 정리해줘.”
-- “여러 사이트에서 이 상품 가격을 비교하고 가장 좋은 조건을 알려줘.”
-- “관리 페이지를 확인해서 보고서를 만들어줘. 제출 직전에는 승인 받아.”
+## Activation
 
-Read-only work can proceed automatically when Work allows it. State-changing work pauses at the policy boundary, and externally consequential actions such as sending, publishing, purchasing, deleting, or transferring money require explicit confirmation through the host product’s confirmation flow.
+When Aside publishes or grants the official remote integration contract, implement only the thin adapter required for:
 
-## Scope and limitations
+1. authentication;
+2. task submission;
+3. task status;
+4. follow-up/steering;
+5. approval relay;
+6. result/screenshots/artifact retrieval.
 
-This repository defines how Work should reason about and report browser tasks; it is not a replacement browser and it is not a general-purpose remote-computer service. Work’s native browser, connected apps, authentication UI, confirmation UI, rollout, and site compatibility remain controlled by ChatGPT. See [docs/WORK_INTEGRATION.md](docs/WORK_INTEGRATION.md), [docs/PROVIDERS.md](docs/PROVIDERS.md), and [docs/OPENAI_RESEARCH.md](docs/OPENAI_RESEARCH.md).
+Then run the no-PC smoke tests in [docs/REMOTE_ACTIVATION_CHECKLIST.md](docs/REMOTE_ACTIVATION_CHECKLIST.md).
+
+Until then the repository is complete up to the official vendor integration boundary. The missing piece is not another browser implementation; it is access to Aside's already-advertised remote/cloud control surface.
