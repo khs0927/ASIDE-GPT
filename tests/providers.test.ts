@@ -6,13 +6,12 @@ import {
   selectBrowserProvider,
 } from "../packages/providers/index.js";
 
-test("Aside remote is the primary target provider", () => {
+test("Aside remote is the primary target provider with a supported Channel transport", () => {
   const selection = selectBrowserProvider();
   assert.equal(selection.provider.id, "aside-remote");
   assert.equal(selection.provider.role, "primary");
-  assert.equal(selection.provider.status, "official-access-required");
-  assert.equal(selection.ready, false);
-  assert.equal(selection.blockedReason, "official-aside-access-required");
+  assert.equal(selection.provider.status, "channel-transport-available");
+  assert.equal(selection.ready, true);
   assert.equal(isAsideExecution(selection.provider), true);
 });
 
@@ -31,10 +30,11 @@ test("Work native is only selected through explicit non-Aside fallback", () => {
   assert.equal(isAsideExecution(explicit.provider), false);
 });
 
-test("official product capability is distinct from public connector readiness", () => {
+test("provider transport availability is distinct from per-user Channels activation", () => {
   const aside = BROWSER_PROVIDERS["aside-remote"];
   assert.equal(aside.performsAsideExecution, true);
-  assert.equal(aside.callableFromAsideGpt, false);
+  assert.equal(aside.callableFromAsideGpt, true);
   assert.match(aside.notes, /Channels/);
+  assert.match(aside.notes, /Slack/);
   assert.match(aside.notes, /Cloud handoff/);
 });
