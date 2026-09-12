@@ -1,22 +1,23 @@
 # ADR-0001: Make the active architecture mobile-only and Work-native
 
-- Status: accepted
+- Status: superseded by ADR-0002
 - Date: 2026-09-12
 
 ## Context
 
-The previous repository routed ChatGPT through a gateway to a persistent node that launched a local Aside CLI and browser. That requires a user-controlled machine and conflicts with the requirement that the user operate only from ChatGPT Mobile.
+This ADR removed the invalid requirement for a user-controlled PC and moved the project toward a mobile-only architecture. That correction remains valid.
 
-OpenAI’s current Work documentation describes cloud browser execution on a separate cloud computer, mobile task start, connected apps, secure sign-in, confirmation for consequential actions, and continuation when the user leaves. The current plugin documentation describes skills as workflow instructions and MCP as the interface for live data/actions. It does not require a plugin to expose a private cloud-browser API.
+However, the original decision also made ChatGPT Work's native cloud browser the primary browser provider because the initial research did not verify a PC-free Aside remote product path.
 
-The official Aside developer documentation reviewed for this migration describes local CLI/MCP/REPL workflows. No public Aside hosted-browser execution API was verified.
+Subsequent research found newer official Aside product evidence: the official pricing page advertises `Channels (Remote control)`, `Cloud handoff`, and team-scale browser-agent runs started from apps, cron jobs, or internal tools. The public developer documentation still does not publish the generic endpoint/auth/schema for those commercial remote capabilities.
 
-## Decision
+## Superseded decision
 
-ChatGPT Work is the orchestrator and its native cloud browser is the default browser provider. ASIDE-GPT is a skills, policy, routing, approval, evidence, and schema package. Connected apps are preferred for structured service operations. Aside is an optional future provider with no implementation until a public hosted runtime is documented.
+The statement that Work's native cloud browser is the default provider is superseded. See `ADR-0002-aside-remote-first.md`.
 
-The old gateway/node code is moved under `legacy/local-node/`, removed from active workspaces and CI, and retained for historical reference.
+## Decisions retained
 
-## Consequences
-
-Users do not need a PC, local browser, local CLI, home server, tunnel, or desktop daemon. Work and account rollout remain prerequisites, and tasks can still pause for sign-in, approval, site compatibility, or other user decisions. Browser execution is intentionally not independently testable from this repository; policy, routing, and evidence behavior are tested locally.
+- No user PC, local browser, localhost bridge, home server, or personal-machine tunnel is required by the target architecture.
+- The legacy local gateway/node prototype remains archived under `legacy/local-node/` and excluded from the active package and CI.
+- No private OpenAI or Aside API is invented.
+- Sensitive actions remain approval-gated.
