@@ -48,14 +48,14 @@ export const BROWSER_PROVIDERS: Readonly<Record<BrowserProviderId, BrowserProvid
 };
 
 export interface ProviderSelectionOptions {
-  allowNonAsideFallback?: boolean;
-  preferred?: BrowserProviderId;
+  allowNonAsideFallback?: boolean | undefined;
+  preferred?: BrowserProviderId | undefined;
 }
 
 export interface ProviderSelection {
   provider: BrowserProviderInfo;
   ready: boolean;
-  blockedReason?: "official-aside-access-required";
+  blockedReason?: "official-aside-access-required" | undefined;
   fallbackUsed: boolean;
 }
 
