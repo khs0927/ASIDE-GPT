@@ -1,32 +1,43 @@
-export type BrowserProviderId = "work-native" | "aside-cloud" | "future-provider";
+export type BrowserProviderId =
+  | "aside-official-remote"
+  | "work-native"
+  | "future-provider";
+
+export type ProviderStatus =
+  | "commercial-capability-confirmed"
+  | "available-by-host"
+  | "not-implemented";
 
 export interface BrowserProviderInfo {
   id: BrowserProviderId;
-  role: "native" | "optional-future";
-  execution: "host-product" | "external-hosted-runtime";
+  role: "primary" | "fallback" | "optional-future";
+  execution: "external-hosted-runtime" | "host-product";
   callableFromAsideGpt: boolean;
-  status: "available-by-host" | "unverified" | "not-implemented";
+  status: ProviderStatus;
+  publicIntegrationContract: "published" | "not-published" | "not-applicable";
   notes: string;
 }
 
 export const BROWSER_PROVIDERS: Readonly<Record<BrowserProviderId, BrowserProviderInfo>> = {
+  "aside-official-remote": {
+    id: "aside-official-remote",
+    role: "primary",
+    execution: "external-hosted-runtime",
+    callableFromAsideGpt: false,
+    status: "commercial-capability-confirmed",
+    publicIntegrationContract: "not-published",
+    notes:
+      "Aside's official pricing advertises Channels (Remote control), Cloud handoff, and team/API-triggered browser-agent runs from apps, cron jobs, or internal tools. The public Help Center does not currently publish the remote endpoint/auth/schema needed to call those capabilities from ASIDE-GPT, so this provider must not invent an endpoint or silently substitute another browser.",
+  },
   "work-native": {
     id: "work-native",
-    role: "native",
+    role: "fallback",
     execution: "host-product",
     callableFromAsideGpt: false,
     status: "available-by-host",
+    publicIntegrationContract: "not-applicable",
     notes:
-      "ChatGPT Work chooses and operates its cloud browser. ASIDE-GPT supplies skills and policies; it does not call a private browser API.",
-  },
-  "aside-cloud": {
-    id: "aside-cloud",
-    role: "optional-future",
-    execution: "external-hosted-runtime",
-    callableFromAsideGpt: false,
-    status: "unverified",
-    notes:
-      "No public Aside hosted-browser execution API was verified, so no endpoint, credential, or client is implemented.",
+      "ChatGPT Work can operate its own cloud browser, but that is not Aside. Use it only when the user explicitly allows a non-Aside fallback.",
   },
   "future-provider": {
     id: "future-provider",
@@ -34,15 +45,17 @@ export const BROWSER_PROVIDERS: Readonly<Record<BrowserProviderId, BrowserProvid
     execution: "external-hosted-runtime",
     callableFromAsideGpt: false,
     status: "not-implemented",
-    notes: "Reserved for a documented provider with a supported cloud runtime and authorization model.",
+    publicIntegrationContract: "not-published",
+    notes: "Reserved for another documented provider if the user explicitly chooses one.",
   },
 };
 
+type ProviderById<T extends BrowserProviderId> = BrowserProviderInfo & { id: T };
+
+export function selectBrowserProvider(): ProviderById<"aside-official-remote">;
+export function selectBrowserProvider<T extends BrowserProviderId>(preferred: T): ProviderById<T>;
 export function selectBrowserProvider(
-  preferred?: BrowserProviderId,
-): BrowserProviderInfo & { id: "work-native" } {
-  if (preferred && preferred !== "work-native") {
-    return BROWSER_PROVIDERS["work-native"] as BrowserProviderInfo & { id: "work-native" };
-  }
-  return BROWSER_PROVIDERS["work-native"] as BrowserProviderInfo & { id: "work-native" };
+  preferred: BrowserProviderId = "aside-official-remote",
+): BrowserProviderInfo {
+  return BROWSER_PROVIDERS[preferred];
 }
