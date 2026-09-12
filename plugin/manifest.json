@@ -1,6 +1,6 @@
 {
   "name": "aside-gpt",
-  "version": "0.3.0",
-  "description": "Mobile-first workflow skills and safety policies for controlling the official Aside Browser Agent through its supported remote/cloud integration surface.",
+  "version": "0.4.0",
+  "description": "Mobile-first skills and safety policies for controlling the official Aside Browser Agent through Aside Channels over Slack, with Cloud handoff no-PC verification gates.",
   "skills": "./skills/"
 }
