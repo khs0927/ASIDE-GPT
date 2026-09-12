@@ -1,22 +1,29 @@
 # ADR-0001: Make the active architecture mobile-only and Work-native
 
-- Status: accepted
+- Status: **superseded by ADR-0002**
 - Date: 2026-09-12
 
 ## Context
 
-The previous repository routed ChatGPT through a gateway to a persistent node that launched a local Aside CLI and browser. That requires a user-controlled machine and conflicts with the requirement that the user operate only from ChatGPT Mobile.
+The previous repository routed ChatGPT through a gateway to a persistent node that launched a local Aside CLI and browser. That required a user-controlled machine and conflicted with the requirement that the user operate only from ChatGPT Mobile.
 
-OpenAI’s current Work documentation describes cloud browser execution on a separate cloud computer, mobile task start, connected apps, secure sign-in, confirmation for consequential actions, and continuation when the user leaves. The current plugin documentation describes skills as workflow instructions and MCP as the interface for live data/actions. It does not require a plugin to expose a private cloud-browser API.
+This ADR correctly established the no-PC invariant and explored ChatGPT Work's native cloud browser as a technically valid mobile-only execution path.
 
-The official Aside developer documentation reviewed for this migration describes local CLI/MCP/REPL workflows. No public Aside hosted-browser execution API was verified.
+At the time of the decision, the research set focused on Aside's public CLI/MCP/REPL developer docs and did not incorporate the stronger official pricing evidence for `Channels (Remote control)`, `Cloud handoff`, and team browser-agent runs triggered from apps, cron jobs, or internal tools.
 
-## Decision
+## Original decision
 
-ChatGPT Work is the orchestrator and its native cloud browser is the default browser provider. ASIDE-GPT is a skills, policy, routing, approval, evidence, and schema package. Connected apps are preferred for structured service operations. Aside is an optional future provider with no implementation until a public hosted runtime is documented.
+The original decision selected ChatGPT Work and its native cloud browser as the default provider and treated Aside as an optional future provider.
 
-The old gateway/node code is moved under `legacy/local-node/`, removed from active workspaces and CI, and retained for historical reference.
+## Supersession
 
-## Consequences
+ADR-0002 supersedes only the **primary-provider** portion of this decision.
 
-Users do not need a PC, local browser, local CLI, home server, tunnel, or desktop daemon. Work and account rollout remain prerequisites, and tasks can still pause for sign-in, approval, site compatibility, or other user decisions. Browser execution is intentionally not independently testable from this repository; policy, routing, and evidence behavior are tested locally.
+The following conclusions remain valid:
+
+- no user PC/local browser/local CLI should be required by the target product;
+- the old local gateway/node prototype remains legacy only;
+- undocumented APIs must not be invented;
+- safety, approval, evidence, and prompt-injection policies remain useful.
+
+The final primary target is now official Aside Remote. Work-native remains an explicit non-Aside fallback and research artifact.
