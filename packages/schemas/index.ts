@@ -25,13 +25,19 @@ export type ConfirmationStatus =
   | "declined"
   | "not_applicable";
 
+export type AsideBlockedReason =
+  | "aside-channel-setup-required"
+  | "cloud-no-pc-execution-not-live-verified"
+  | "official-aside-access-required";
+
 export interface TaskRequest {
   request: string;
-  /**
-   * Explicit opt-in to a non-Aside fallback. When false/omitted, a missing
-   * official Aside remote contract must block rather than silently switch engines.
-   */
+  /** Explicit opt-in to a non-Aside fallback. */
   allowNonAsideFallback?: boolean | undefined;
+  /** True only after an existing Slack conversation is proven to be connected to official Aside Channels. */
+  asideChannelConfigured?: boolean | undefined;
+  /** True only after a live test proves the Aside task runs with no local user PC/Mac/Aside process online. */
+  cloudNoPcExecutionLiveVerified?: boolean | undefined;
 }
 
 export interface TaskPolicy {
@@ -44,9 +50,10 @@ export interface TaskPolicy {
 export interface RouteDecision {
   executor: Executor;
   browserProvider: "aside-remote" | "work-native";
+  asideTransport: "channels-slack" | "official-api" | "none";
   asideExecution: boolean;
   ready: boolean;
-  blockedReason?: "official-aside-access-required" | undefined;
+  blockedReason?: AsideBlockedReason | undefined;
   fallback: "work-native-browser" | "none";
   reason: string;
 }
