@@ -49,7 +49,7 @@ export interface TaskPolicy {
 
 export interface RouteDecision {
   executor: Executor;
-  appHint?: string;
+  appHint?: string | undefined;
   browserProvider: "aside-official-remote" | "work-native";
   fallback: "work-native-browser" | "ask-user" | "none";
   reason: string;
