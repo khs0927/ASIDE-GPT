@@ -19,7 +19,7 @@ class FixtureAdapter implements AsideRemoteAdapter {
   };
   submitCalls = 0;
   responseCalls = 0;
-  requestKey?: string;
+  requestKey: string | undefined;
   submitImpl?: (input: AsideRemoteSubmitInput) => Promise<AsideRemoteTaskState>;
   lookupValue: AsideRemoteTaskState | null = null;
 
