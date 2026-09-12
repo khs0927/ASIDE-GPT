@@ -6,7 +6,7 @@ import { test } from "node:test";
 test("all skills have official-style metadata and mobile-only guidance", async () => {
   const root = join(process.cwd(), "plugin", "skills");
   const dirs = (await readdir(root, { withFileTypes: true })).filter((entry) => entry.isDirectory());
-  assert.equal(dirs.length, 5);
+  assert.equal(dirs.length, 6);
   for (const dir of dirs) {
     const source = await readFile(join(root, dir.name, "SKILL.md"), "utf8");
     assert.match(source, new RegExp(`name: ${dir.name}`));
