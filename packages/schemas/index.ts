@@ -31,7 +31,7 @@ export interface TaskRequest {
    * Explicit opt-in to a non-Aside fallback. When false/omitted, a missing
    * official Aside remote contract must block rather than silently switch engines.
    */
-  allowNonAsideFallback?: boolean;
+  allowNonAsideFallback?: boolean | undefined;
 }
 
 export interface TaskPolicy {
@@ -46,7 +46,7 @@ export interface RouteDecision {
   browserProvider: "aside-remote" | "work-native";
   asideExecution: boolean;
   ready: boolean;
-  blockedReason?: "official-aside-access-required";
+  blockedReason?: "official-aside-access-required" | undefined;
   fallback: "work-native-browser" | "none";
   reason: string;
 }
