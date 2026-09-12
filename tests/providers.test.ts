@@ -16,6 +16,14 @@ test("Aside remote is the primary target provider", () => {
   assert.equal(isAsideExecution(selection.provider), true);
 });
 
+test("an authorized runtime adapter makes Aside ready without changing catalog metadata", () => {
+  const selection = selectBrowserProvider({ asideRemoteAvailable: true });
+  assert.equal(selection.provider.id, "aside-remote");
+  assert.equal(selection.ready, true);
+  assert.equal(selection.blockedReason, undefined);
+  assert.equal(selection.provider.callableFromAsideGpt, false);
+});
+
 test("Work native is only selected through explicit non-Aside fallback", () => {
   const implicit = selectBrowserProvider({ preferred: "work-native" });
   assert.equal(implicit.provider.id, "aside-remote");
