@@ -13,6 +13,10 @@ const mcp = toNodeHandler(createAsideMcpHandler(broker));
 app.disable('x-powered-by');
 app.use(express.json({ limit: '1mb' }));
 
+function routeParam(value: string | string[]): string {
+  return Array.isArray(value) ? value[0] ?? '' : value;
+}
+
 function secretMatches(candidate: string | undefined): boolean {
   if (!candidate) return false;
   const expected = Buffer.from(config.sharedSecret);
@@ -43,8 +47,9 @@ app.get('/health', (_req, res) => {
 });
 
 app.post('/api/nodes/:nodeId/heartbeat', requireNodeSecret, (req, res) => {
+  const nodeId = routeParam(req.params.nodeId);
   const node = broker.heartbeat({
-    nodeId: req.params.nodeId,
+    nodeId,
     version: typeof req.body?.version === 'string' ? req.body.version : undefined,
     asideVersion: typeof req.body?.asideVersion === 'string' ? req.body.asideVersion : undefined,
   });
@@ -52,8 +57,9 @@ app.post('/api/nodes/:nodeId/heartbeat', requireNodeSecret, (req, res) => {
 });
 
 app.get('/api/nodes/:nodeId/tasks/next', requireNodeSecret, (req, res) => {
-  broker.heartbeat({ nodeId: req.params.nodeId });
-  const task = broker.claimNext(req.params.nodeId);
+  const nodeId = routeParam(req.params.nodeId);
+  broker.heartbeat({ nodeId });
+  const task = broker.claimNext(nodeId);
   if (!task) {
     res.status(204).end();
     return;
@@ -68,7 +74,7 @@ app.post('/api/nodes/:nodeId/tasks/:taskId/result', requireNodeSecret, (req, res
     return;
   }
   try {
-    const task = broker.complete(req.params.nodeId, req.params.taskId, payload);
+    const task = broker.complete(routeParam(req.params.nodeId), routeParam(req.params.taskId), payload);
     res.json({ ok: true, task });
   } catch (error) {
     res.status(404).json({ error: error instanceof Error ? error.message : String(error) });
@@ -81,5 +87,5 @@ app.all('/mcp', requireBearer, (req, res) => {
 
 app.listen(config.port, '0.0.0.0', () => {
   console.log(`ASIDE-GPT gateway listening on :${config.port}`);
-  console.log(`MCP endpoint: /mcp`);
+  console.log('MCP endpoint: /mcp');
 });
