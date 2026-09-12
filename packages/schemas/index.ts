@@ -27,6 +27,8 @@ export type ConfirmationStatus =
 
 export interface TaskRequest {
   request: string;
+  /** True only when a supported, authorized official Aside remote adapter is connected. */
+  asideRemoteAvailable?: boolean | undefined;
   /**
    * Explicit opt-in to a non-Aside fallback. When false/omitted, a missing
    * official Aside remote contract must block rather than silently switch engines.
