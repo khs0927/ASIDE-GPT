@@ -8,65 +8,47 @@ import type {
   TaskRequest,
 } from "../schemas/index.js";
 
-const APP_HINTS: ReadonlyArray<readonly [RegExp, string]> = [
-  [/\b(gmail|email|inbox|receipt|영수증|메일|이메일)\b/i, "Gmail / connected email app"],
-  [/\b(calendar|calendars|google calendar|일정|캘린더|예약)\b/i, "Calendar / connected calendar app"],
-  [/\b(github|git hub|actions|repository|repo|깃허브|액션)\b/i, "GitHub / connected GitHub app"],
-  [/\b(drive|docs|sheets|slides|구글 드라이브|문서|스프레드시트)\b/i, "Google Drive / connected productivity app"],
-  [/\b(slack|teams|notion|슬랙|팀즈|노션)\b/i, "Connected collaboration app"],
-];
-
-function findAppHint(request: string): string | undefined {
-  return APP_HINTS.find(([pattern]) => pattern.test(request))?.[1];
-}
-
-function needsBrowserWithApp(request: string): boolean {
-  const browserWords = /\b(browser|website|web|dashboard|portal|site|page)\b|브라우저|웹사이트|페이지|대시보드|관리자/u;
-  const secondSystemWords = /\b(and|then|compare|current|price|status|log|deploy|가격|상태|로그|배포)\b/i;
-  return browserWords.test(request) || secondSystemWords.test(request);
-}
-
 export function chooseExecutor(request: TaskRequest): RouteDecision {
-  const appHint = findAppHint(request.request);
-  const provider = selectBrowserProvider();
+  const selection = selectBrowserProvider({
+    allowNonAsideFallback: request.allowNonAsideFallback,
+    preferred: request.allowNonAsideFallback ? "work-native" : "aside-remote",
+  });
 
-  if (appHint && needsBrowserWithApp(request.request)) {
+  if (selection.provider.id === "work-native") {
     return {
-      executor: "hybrid",
-      appHint,
-      browserProvider: provider.id,
+      executor: "work_native_browser",
+      browserProvider: "work-native",
+      asideExecution: false,
+      ready: true,
       fallback: "work-native-browser",
-      reason: "Use the connected app for structured data and Work's native browser for the remaining web context.",
-    };
-  }
-
-  if (appHint) {
-    return {
-      executor: "connected_app",
-      appHint,
-      browserProvider: provider.id,
-      fallback: "work-native-browser",
-      reason: "Prefer the service's connected app when it can perform the requested operation.",
+      reason:
+        "The user explicitly allowed a non-Aside fallback. Use Work's native browser, but label the result as fallback execution and never claim that Aside performed it.",
     };
   }
 
   return {
-    executor: "work_native_browser",
-    browserProvider: provider.id,
-    fallback: "ask-user",
-    reason: "Use the native Work cloud browser for a general website task; no local browser or private browser API is required.",
+    executor: "aside_remote_browser",
+    browserProvider: "aside-remote",
+    asideExecution: true,
+    ready: selection.ready,
+    blockedReason: selection.blockedReason,
+    fallback: "none",
+    reason: selection.ready
+      ? "Use the official Aside remote/cloud execution contract so the actual browser work is performed by Aside."
+      : "Aside remote/cloud capability is officially advertised, but its public external integration contract is not yet available. Stop at the integration boundary; do not invent an endpoint and do not silently replace Aside with another browser.",
   };
 }
 
-function executionInstruction(executor: Executor): string {
-  switch (executor) {
-    case "connected_app":
-      return "Use the matching connected app first. If it cannot complete the requested operation, continue with Work's native cloud browser when appropriate.";
-    case "hybrid":
-      return "Use the connected app and Work's native cloud browser as one plan, passing only the minimum necessary results between them.";
-    case "work_native_browser":
-      return "Use Work's native cloud browser. Do not ask the user to start a local browser, install an extension, run a CLI, or expose a tunnel.";
+function executionInstruction(route: RouteDecision): string {
+  if (route.executor === "work_native_browser") {
+    return "Use Work's native browser only because the user explicitly opted into a non-Aside fallback. Mark all evidence as non-Aside execution.";
   }
+
+  if (!route.ready) {
+    return "Do not execute a replacement browser. Report official-aside-access-required and point to docs/ASIDE_ACCESS_REQUEST.md for the exact supported contract needed to activate Aside Remote.";
+  }
+
+  return "Submit the task through the documented official Aside remote/cloud interface. Keep browser execution inside Aside and preserve Aside's authentication and approval boundaries.";
 }
 
 export function planTask(task: TaskRequest): BrowserTaskPlan {
@@ -86,7 +68,7 @@ export function planTask(task: TaskRequest): BrowserTaskPlan {
     {
       id: "execute",
       kind: "execute",
-      instruction: executionInstruction(route.executor),
+      instruction: executionInstruction(route),
     },
   ];
 
@@ -96,8 +78,8 @@ export function planTask(task: TaskRequest): BrowserTaskPlan {
       kind: "confirm",
       instruction:
         policy.taskClass === "WRITE"
-          ? "Pause before changing remote state and show the exact proposed change."
-          : "Pause immediately before the consequential action and request explicit confirmation.",
+          ? "Preserve Aside's approval boundary and pause before changing remote state when confirmation is required."
+          : "Preserve Aside's approval boundary and require explicit user confirmation immediately before the consequential action.",
     });
   }
 
@@ -105,13 +87,14 @@ export function planTask(task: TaskRequest): BrowserTaskPlan {
     {
       id: "verify",
       kind: "verify",
-      instruction: "Verify the result from the final page state, not from an unverified model assumption.",
+      instruction:
+        "Verify the result from Aside's returned final state/artifacts. If a fallback was explicitly used, state that Aside did not execute the browser task.",
     },
     {
       id: "evidence",
       kind: "evidence",
       instruction:
-        "Return the final URL, page title, important values, timestamp, actions, and confirmation status; add screenshots or source links when useful.",
+        "Return provider identity, final URL, page title, important values, timestamp, actions, confirmation status, and Aside screenshots/artifacts when the official contract provides them.",
     },
   );
 
@@ -125,8 +108,9 @@ export function planTask(task: TaskRequest): BrowserTaskPlan {
 }
 
 export const ORCHESTRATION_RULES = Object.freeze({
-  chooseExecutorAutomatically: true,
-  cloudBrowserApiRequired: false,
+  primaryProvider: "aside-remote" as const,
+  replacementBrowserCountsAsSuccess: false,
+  allowSilentFallback: false,
   localExecutionRequired: false,
   promptInjectionRule: UNTRUSTED_WEB_CONTENT_RULE,
 });
