@@ -17,9 +17,9 @@ function routeParam(value: string | string[]): string {
   return Array.isArray(value) ? value[0] ?? '' : value;
 }
 
-function secretMatches(candidate: string | undefined): boolean {
+function secretMatches(candidate: string | undefined, expectedValue: string): boolean {
   if (!candidate) return false;
-  const expected = Buffer.from(config.sharedSecret);
+  const expected = Buffer.from(expectedValue);
   const actual = Buffer.from(candidate);
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
@@ -27,7 +27,7 @@ function secretMatches(candidate: string | undefined): boolean {
 function requireBearer(req: Request, res: Response, next: NextFunction): void {
   const header = req.header('authorization');
   const token = header?.startsWith('Bearer ') ? header.slice('Bearer '.length) : undefined;
-  if (!secretMatches(token)) {
+  if (!secretMatches(token, config.mcpToken)) {
     res.status(401).json({ error: 'unauthorized' });
     return;
   }
@@ -35,7 +35,7 @@ function requireBearer(req: Request, res: Response, next: NextFunction): void {
 }
 
 function requireNodeSecret(req: Request, res: Response, next: NextFunction): void {
-  if (!secretMatches(req.header('x-aside-gpt-secret') ?? undefined)) {
+  if (!secretMatches(req.header('x-aside-gpt-secret') ?? undefined, config.nodeSecret)) {
     res.status(401).json({ error: 'unauthorized' });
     return;
   }
