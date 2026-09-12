@@ -2,6 +2,12 @@
 
 ## Verdict
 
+Overall verdict for PC-free mobile ChatGPT execution: **NOT PUBLICLY VERIFIED**.
+The verified items below are advertised product features, not proof that a user
+can onboard or execute browser tasks without a desktop. Cloud handoff, cloud
+devices and Channels alone do not establish an Aside-hosted browser contract.
+See [ADR-0003](ADR-0003-aside-playwright-composition.md) for composition limits.
+
 **Official remote/cloud product capability: VERIFIED.**
 
 **Public developer API / Remote MCP contract for direct ChatGPT integration: NOT PUBLICLY VERIFIED.**

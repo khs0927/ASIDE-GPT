@@ -85,7 +85,18 @@ The CI suite verifies that:
 - unavailable official Aside access produces a blocked state instead of a fabricated endpoint.
 - approval and evidence policies continue to pass.
 
-## Activation
+## Playwright and open-source composition
+
+See [ADR-0003](docs/ADR-0003-aside-playwright-composition.md) for the detailed
+Aside-owned execution architecture, optional isolated Playwright fixture QA,
+approval/event boundaries, failure handling and activation tests.
+
+`packages/integration/` implements a design-time composition review. It rejects
+replacement browser agents and missing mobile/hosted capability evidence.
+It never activates an adapter, even when supplied review assertions pass.
+No Playwright browser, external agent, live connector or paid service is installed.
+
+## Official adapter activation
 
 When Aside publishes or grants the official remote integration contract, implement only the thin adapter required for:
 
