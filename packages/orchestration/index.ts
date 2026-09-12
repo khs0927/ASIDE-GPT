@@ -11,7 +11,8 @@ import type {
 export function chooseExecutor(request: TaskRequest): RouteDecision {
   const selection = selectBrowserProvider({
     allowNonAsideFallback: request.allowNonAsideFallback,
-    preferred: request.allowNonAsideFallback ? "work-native" : "aside-remote",
+    asideRemoteAvailable: request.asideRemoteAvailable,
+    preferred: request.allowNonAsideFallback && !request.asideRemoteAvailable ? "work-native" : "aside-remote",
   });
 
   if (selection.provider.id === "work-native") {
@@ -34,8 +35,8 @@ export function chooseExecutor(request: TaskRequest): RouteDecision {
     blockedReason: selection.blockedReason,
     fallback: "none",
     reason: selection.ready
-      ? "Use the official Aside remote/cloud execution contract so the actual browser work is performed by Aside."
-      : "Aside remote/cloud capability is officially advertised, but its public external integration contract is not yet available. Stop at the integration boundary; do not invent an endpoint and do not silently replace Aside with another browser.",
+      ? "Use the connected official Aside remote/cloud adapter so the actual browser work is performed by Aside."
+      : "Aside remote/cloud capability is officially advertised, but no authorized external integration adapter is connected. Stop at the integration boundary; do not invent an endpoint and do not silently replace Aside with another browser.",
   };
 }
 
@@ -48,7 +49,7 @@ function executionInstruction(route: RouteDecision): string {
     return "Do not execute a replacement browser. Report official-aside-access-required and point to docs/ASIDE_ACCESS_REQUEST.md for the exact supported contract needed to activate Aside Remote.";
   }
 
-  return "Submit the task through the documented official Aside remote/cloud interface. Keep browser execution inside Aside and preserve Aside's authentication and approval boundaries.";
+  return "Submit the task through the connected official Aside remote/cloud adapter. Keep browser execution inside Aside and preserve Aside's authentication and approval boundaries.";
 }
 
 export function planTask(task: TaskRequest): BrowserTaskPlan {
@@ -72,7 +73,7 @@ export function planTask(task: TaskRequest): BrowserTaskPlan {
     },
   ];
 
-  if (policy.confirmation !== "none") {
+  if (route.ready && policy.confirmation !== "none") {
     steps.push({
       id: "confirm",
       kind: "confirm",
@@ -83,27 +84,29 @@ export function planTask(task: TaskRequest): BrowserTaskPlan {
     });
   }
 
-  steps.push(
-    {
-      id: "verify",
-      kind: "verify",
-      instruction:
-        "Verify the result from Aside's returned final state/artifacts. If a fallback was explicitly used, state that Aside did not execute the browser task.",
-    },
-    {
-      id: "evidence",
-      kind: "evidence",
-      instruction:
-        "Return provider identity, final URL, page title, important values, timestamp, actions, confirmation status, and Aside screenshots/artifacts when the official contract provides them.",
-    },
-  );
+  if (route.ready) {
+    steps.push(
+      {
+        id: "verify",
+        kind: "verify",
+        instruction:
+          "Verify the result from Aside's returned final state/artifacts. If a fallback was explicitly used, state that Aside did not execute the browser task.",
+      },
+      {
+        id: "evidence",
+        kind: "evidence",
+        instruction:
+          "Return provider identity, final URL, page title, important values, timestamp, actions, confirmation status, and Aside screenshots/artifacts when the official contract provides them.",
+      },
+    );
+  }
 
   return {
     request: task.request,
     policy,
     route,
     steps,
-    mustPauseBeforeAction: policy.confirmation !== "none",
+    mustPauseBeforeAction: route.ready && policy.confirmation !== "none",
   };
 }
 
