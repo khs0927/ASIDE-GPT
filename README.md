@@ -18,7 +18,7 @@ The cloud browser is a Work-native execution capability. This repository does no
 
 ## What is included
 
-- `skills/`: OpenAI-style `SKILL.md` workflow skills for browser tasks, research, authenticated sites, shopping, and multi-site work.
+- `plugin/skills/`: OpenAI-style `SKILL.md` workflow skills for browser tasks, research, authenticated sites, shopping, and multi-site work.
 - `packages/`: deterministic TypeScript policies, schemas, evidence validation, approval boundaries, provider catalog, and routing helpers. These helpers do not launch a browser.
 - `plugin/manifest.json`: skills-only package metadata. No custom MCP endpoint is declared.
 - `providers/`: the provider boundary. `work-native` is the default logical provider; Aside hosted execution is explicitly unverified and has no adapter.

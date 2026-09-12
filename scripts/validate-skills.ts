@@ -2,7 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 
 async function main(): Promise<void> {
-  const root = join(process.cwd(), "skills");
+  const root = join(process.cwd(), "plugin", "skills");
   const entries = (await readdir(root, { withFileTypes: true }))
     .filter((entry) => entry.isDirectory())
     .map((entry) => entry.name)

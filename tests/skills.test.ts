@@ -4,7 +4,7 @@ import { join } from "node:path";
 import { test } from "node:test";
 
 test("all skills have official-style metadata and mobile-only guidance", async () => {
-  const root = join(process.cwd(), "skills");
+  const root = join(process.cwd(), "plugin", "skills");
   const dirs = (await readdir(root, { withFileTypes: true })).filter((entry) => entry.isDirectory());
   assert.equal(dirs.length, 5);
   for (const dir of dirs) {
