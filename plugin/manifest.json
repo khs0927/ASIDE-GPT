@@ -1,0 +1,6 @@
+{
+  "name": "aside-gpt",
+  "version": "0.3.0",
+  "description": "Mobile-first workflow skills and safety policies for controlling the official Aside Browser Agent through its supported remote/cloud integration surface.",
+  "skills": "./skills/"
+}

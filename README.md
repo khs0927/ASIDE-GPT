@@ -1,80 +1,101 @@
 # ASIDE-GPT
 
-Mobile-first browser automation for ChatGPT, powered by a trusted Aside execution node.
+ASIDE-GPT exists for one purpose: **use the official Aside Browser Agent from mobile ChatGPT without requiring the user's PC to stay online.**
 
-## Goal
+It is not a new browser engine and it must not silently replace Aside with ChatGPT Work's browser.
 
-Use **ChatGPT on mobile as the control surface** for browser automation. The phone never needs to run a browser automation engine or a local MCP process. ChatGPT calls a remote MCP gateway; a trusted execution node with the Aside CLI/browser installed performs the work and returns the result.
-
-```text
-ChatGPT mobile
-      |
-      | HTTPS / MCP
-      v
-ASIDE-GPT Gateway
-      |
-      | outbound-safe task channel
-      v
-ASIDE-GPT Node Agent
-      |
-      | local CLI
-      v
-Aside CLI + Aside Browser
-      |
-      v
-Logged-in websites
+```mermaid
+flowchart TD
+    M[ChatGPT Mobile] --> C[ASIDE-GPT thin connector]
+    C --> A[Official Aside remote/cloud control plane]
+    A --> B[Aside Browser Agent]
+    B --> W[Websites and logged-in services]
 ```
 
-## Why this architecture
+## Current verified state
 
-`aside mcp` is a local stdio MCP surface. A mobile ChatGPT client cannot spawn that process on another machine. ASIDE-GPT therefore separates the public ChatGPT-facing MCP endpoint from the private machine that owns the browser session.
+Official Aside product material currently verifies remote/cloud capabilities:
 
-The node agent only makes outbound HTTPS requests to the gateway, so the machine running Aside does not need an inbound port or router configuration.
+- **Channels (Remote control)** on Pro.
+- **Cloud handoff** on Pro.
+- Team/contact-sales capability to **start browser agent runs from your app, cron jobs, or internal tools**.
+- The official changelog includes management of **active cloud devices**.
 
-## MVP scope
+Sources:
 
-- Remote MCP endpoint for ChatGPT
-- `browser_run_task` for agentic browser work
-- `browser_continue_task` for continuing an Aside session
-- `browser_node_status` for checking whether a trusted execution node is online
-- Outbound-polling node agent that invokes the local Aside CLI
-- Shared-secret authentication between gateway and node
-- Conservative timeouts and redacted logs
-- No credential/cookie extraction APIs
-- No raw arbitrary shell tool exposed to ChatGPT
+- https://aside.com/pricing
+- https://docs.aside.com/changelog/components
+- https://docs.aside.com/help/developers
 
-## Security boundary
+What is **not yet publicly documented** is the external developer contract behind those remote/cloud features: endpoint or Remote MCP URL, authentication/OAuth schema, run-status contract, remote approvals, and result/artifact retrieval.
 
-ASIDE-GPT does **not** bypass Aside's own confirmation or credential protections. Sensitive actions such as payments, posts, messages, account/security changes, and other consequential actions must remain approval-gated by the execution environment.
+For that reason ASIDE-GPT does not invent an API. The active provider state is `official-aside-access-required` until Aside publishes or grants the supported integration contract.
 
-Do not expose cookies, passwords, passkeys, browser-profile files, or raw credentials through MCP tool results.
+See [docs/ASIDE_REMOTE_FEASIBILITY.md](docs/ASIDE_REMOTE_FEASIBILITY.md) and [docs/ASIDE_ACCESS_REQUEST.md](docs/ASIDE_ACCESS_REQUEST.md).
 
-## Repository layout
+## Success criterion
+
+A task counts as **ASIDE-GPT execution** only when the actual browser work is performed by Aside.
 
 ```text
-apps/
-  gateway/    Remote MCP + task broker
-  node/       Trusted node agent that runs Aside locally
-docs/
-  ARCHITECTURE.md
+Mobile ChatGPT
+  -> thin request/approval/result bridge
+  -> official Aside Remote / Channels / Cloud Handoff surface
+  -> Aside Browser Agent
 ```
 
-## Quick start (development)
+Using another browser engine can be an explicitly requested fallback, but it must be labeled as non-Aside execution and does not satisfy the core project goal.
+
+## What is implemented
+
+- `packages/providers/`: Aside Remote is the primary target provider; silent replacement is prohibited.
+- `packages/orchestration/`: browser tasks route to Aside first and stop at `official-aside-access-required` when the official connector contract is unavailable.
+- `packages/policies/`: task risk and confirmation rules.
+- `packages/approvals/`: approval boundaries retained for consequential actions.
+- `packages/evidence/`: evidence requirements for completed browser work.
+- `plugin/skills/`: workflow skills that can be reused once the official Aside connector is activated.
+- `providers/aside/`: verified capability record and activation boundary.
+- `legacy/local-node/`: archived first prototype that required a PC/local Aside process. It is not part of the target architecture.
+
+## Explicitly not required by the target architecture
+
+```text
+NO user PC requirement
+NO localhost bridge
+NO home server
+NO personal tunnel
+NO local Aside CLI requirement
+NO replacement Playwright browser
+NO reverse-engineered Aside private API
+NO cookie/password extraction
+```
+
+## Verification
 
 ```bash
 npm install
-cp .env.example .env
-npm run dev:gateway
-# in another terminal on the machine that has Aside installed
-npm run dev:node
+npm run ci
 ```
 
-The gateway is designed to be exposed through HTTPS and connected to ChatGPT as a remote MCP server. For production, put it behind TLS and replace the MVP in-memory broker with a durable store before relying on long-running tasks.
+The CI suite verifies that:
 
-## Development status
+- Aside Remote remains the primary provider.
+- Work-native cannot be selected silently.
+- non-Aside fallback requires explicit opt-in.
+- unavailable official Aside access produces a blocked state instead of a fabricated endpoint.
+- approval and evidence policies continue to pass.
 
-Initial mobile-first scaffold. The first implementation targets one persistent gateway process and one trusted Aside node. Durable queues, multi-node routing, OAuth and deployment automation follow after the local Aside CLI contract is smoke-tested.
+## Activation
 
-## Upstream
+When Aside publishes or grants the official remote integration contract, implement only the thin adapter required for:
 
-ASIDE-GPT is an independent integration project. Aside is a separate product/service. This project uses its documented developer surfaces (CLI/MCP/REPL) rather than copying the proprietary Aside browser implementation.
+1. authentication;
+2. task submission;
+3. task status;
+4. follow-up/steering;
+5. approval relay;
+6. result/screenshots/artifact retrieval.
+
+Then run the no-PC smoke tests in [docs/REMOTE_ACTIVATION_CHECKLIST.md](docs/REMOTE_ACTIVATION_CHECKLIST.md).
+
+Until then the repository is complete up to the official vendor integration boundary. The missing piece is not another browser implementation; it is access to Aside's already-advertised remote/cloud control surface.
