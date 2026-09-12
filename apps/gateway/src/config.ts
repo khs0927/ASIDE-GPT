@@ -8,11 +8,14 @@ function int(name: string, fallback: number): number {
 
 export const config = {
   port: int('PORT', 8787),
-  sharedSecret: process.env.ASIDE_GPT_SHARED_SECRET ?? '',
+  mcpToken: process.env.ASIDE_GPT_MCP_TOKEN ?? '',
+  nodeSecret: process.env.ASIDE_GPT_NODE_SECRET ?? '',
   taskTimeoutMs: int('ASIDE_GPT_TASK_TIMEOUT_MS', 120_000),
   nodeStaleMs: int('ASIDE_GPT_NODE_STALE_MS', 15_000),
 };
 
-if (!config.sharedSecret) {
-  throw new Error('ASIDE_GPT_SHARED_SECRET is required');
+if (!config.mcpToken) throw new Error('ASIDE_GPT_MCP_TOKEN is required');
+if (!config.nodeSecret) throw new Error('ASIDE_GPT_NODE_SECRET is required');
+if (config.mcpToken === config.nodeSecret) {
+  throw new Error('ASIDE_GPT_MCP_TOKEN and ASIDE_GPT_NODE_SECRET must be different');
 }
