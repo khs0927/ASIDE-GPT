@@ -11,7 +11,14 @@ export class TaskBroker {
   ) {}
 
   heartbeat(node: Omit<NodeState, 'lastSeenAt'>): NodeState {
-    const state: NodeState = { ...node, lastSeenAt: Date.now() };
+    const previous = this.nodes.get(node.nodeId);
+    const state: NodeState = {
+      ...previous,
+      ...node,
+      version: node.version ?? previous?.version,
+      asideVersion: node.asideVersion ?? previous?.asideVersion,
+      lastSeenAt: Date.now(),
+    };
     this.nodes.set(node.nodeId, state);
     return state;
   }
