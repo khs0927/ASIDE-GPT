@@ -13,9 +13,8 @@ export const CONFIRMATION_MODES = [
 export type ConfirmationMode = (typeof CONFIRMATION_MODES)[number];
 
 export const EXECUTORS = [
-  "connected_app",
+  "aside_remote_browser",
   "work_native_browser",
-  "hybrid",
 ] as const;
 export type Executor = (typeof EXECUTORS)[number];
 
@@ -28,7 +27,11 @@ export type ConfirmationStatus =
 
 export interface TaskRequest {
   request: string;
-  availableApps?: readonly string[];
+  /**
+   * Explicit opt-in to a non-Aside fallback. When false/omitted, a missing
+   * official Aside remote contract must block rather than silently switch engines.
+   */
+  allowNonAsideFallback?: boolean;
 }
 
 export interface TaskPolicy {
@@ -40,9 +43,11 @@ export interface TaskPolicy {
 
 export interface RouteDecision {
   executor: Executor;
-  appHint?: string;
-  browserProvider: "work-native";
-  fallback: "work-native-browser" | "ask-user";
+  browserProvider: "aside-remote" | "work-native";
+  asideExecution: boolean;
+  ready: boolean;
+  blockedReason?: "official-aside-access-required";
+  fallback: "work-native-browser" | "none";
   reason: string;
 }
 
