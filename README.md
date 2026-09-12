@@ -33,6 +33,18 @@ For that reason ASIDE-GPT does not invent an API. The active provider state is `
 
 See [docs/ASIDE_REMOTE_FEASIBILITY.md](docs/ASIDE_REMOTE_FEASIBILITY.md) and [docs/ASIDE_ACCESS_REQUEST.md](docs/ASIDE_ACCESS_REQUEST.md).
 
+## Open-source connector implementation
+
+The connector now combines **XState + Zod + SQLite** for validated task events,
+durable state, revision conflicts, duplicate-event handling, exact-action approval
+binding and result metadata checks. It does not call an undocumented Aside API.
+The actual Aside remote adapter and mobile end-to-end execution remain blocked
+pending the official integration contract: **NOT PUBLICLY VERIFIED**.
+
+See [the candidate comparison and architecture](docs/OPEN_SOURCE_FUSION.md) and
+[runtime API and limitations](docs/RUNTIME.md). Playwright, Browser Use and other
+independent agents are not installed as substitute production executors.
+
 ## Success criterion
 
 A task counts as **ASIDE-GPT execution** only when the actual browser work is performed by Aside.

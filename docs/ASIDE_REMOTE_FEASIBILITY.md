@@ -119,6 +119,11 @@ No fake `ASIDE_REMOTE_URL`, undocumented endpoint, reverse-engineered private AP
 
 ## Completion boundary
 
+The 2026-09-12 [open-source fusion review](OPEN_SOURCE_FUSION.md) retains the
+**NOT PUBLICLY VERIFIED** verdict. XState, Zod and SQLite now implement the local
+state of a future cloud connector; they do not establish an Aside hosted API.
+The runtime requires no user PC but is not yet a deployed mobile service.
+
 The repository can be completed up to the official integration boundary now: provider policy, capability detection, schemas, approvals, evidence requirements, docs, tests, and an access-request checklist.
 
 Actual end-to-end Aside execution can only be enabled when the official remote integration contract is supplied by Aside or becomes publicly documented.
