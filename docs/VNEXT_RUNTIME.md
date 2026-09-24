@@ -60,3 +60,18 @@ const client = new LocalModelClient({
 ```
 
 The host must run the local server separately. A failed local health check must remain visible and must not silently select a paid provider.
+
+
+## Gemini Web provider adapter
+
+`GeminiWebProvider` connects to the loopback OpenAI-compatible server exposed by `aside-gemini` at `http://127.0.0.1:8765/v1`.
+
+```ts
+const provider = new GeminiWebProvider();
+const result = await provider.ask({
+  prompt: "Return exactly: ASIDE_GEMINI_OK",
+  mode: "oracle",
+});
+```
+
+The adapter preserves provenance as `executor: "aside-gemini"` and `transport: "openai-compatible"`. It must not be relabeled as an Aside executor because the browser and Gemini routing are performed by the separate bridge. The provider is advisory and does not authorize browser actions.

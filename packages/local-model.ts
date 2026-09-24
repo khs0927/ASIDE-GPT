@@ -14,6 +14,8 @@ export interface LocalModelCompletion {
   model: string;
   content: string;
   finishReason?: string;
+  conversationUrl?: string;
+  backend?: string;
 }
 
 export interface LocalModelHealth {
@@ -152,10 +154,14 @@ export class LocalModelClient {
     if (typeof content !== "string" || content.trim().length === 0) {
       throw new LocalModelError("local model returned no non-empty message content", response.status);
     }
+    const conversationUrl = response.headers.get("X-Conversation-Url") ?? undefined;
+    const backend = response.headers.get("X-Backend") ?? undefined;
     return {
       model: typeof payload.model === "string" ? payload.model : model ?? "unknown",
       content,
       ...(typeof choice?.finish_reason === "string" ? { finishReason: choice.finish_reason } : {}),
+      ...(conversationUrl !== undefined ? { conversationUrl } : {}),
+      ...(backend !== undefined ? { backend } : {}),
     };
   }
 
