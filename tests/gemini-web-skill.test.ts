@@ -1,8 +1,9 @@
 import assert from "node:assert/strict";
 import { readFile } from "node:fs/promises";
+import { join } from "node:path";
 import { test } from "node:test";
 
-const skillPath = new URL("../plugin/skills/gemini-web/SKILL.md", import.meta.url);
+const skillPath = join(process.cwd(), "plugin", "skills", "gemini-web", "SKILL.md");
 
 test("Gemini web skill keeps Aside as the executor and avoids credential replay", async () => {
   const source = await readFile(skillPath, "utf8");
