@@ -45,3 +45,18 @@ The selection contracts live in `packages/browser-backend.ts`, `packages/reasoni
 5. Keep the existing credential, approval, and evidence tests green.
 
 No endpoint, OAuth flow, cookie extraction, or reverse-engineered Gemini protocol is added by this change.
+
+## Local model smoke path
+
+`packages/local-model.ts` provides a credential-free client for a host-provided OpenAI-compatible server on loopback HTTP. It supports `/v1/models` health checks and `/v1/chat/completions` with bounded non-streaming responses. It does not start Ollama or LM Studio, download models, access cookies, or call remote APIs.
+
+Example host configuration:
+
+```ts
+const client = new LocalModelClient({
+  baseUrl: "http://127.0.0.1:11434/v1",
+  model: "your-local-model",
+});
+```
+
+The host must run the local server separately. A failed local health check must remain visible and must not silently select a paid provider.

@@ -14,3 +14,4 @@ export * from "./gemini-web/index.js";
 export * from "./browser-backend.js";
 export * from "./reasoning-providers.js";
 export * from "./gemini-transports.js";
+export * from "./local-model.js";

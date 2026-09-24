@@ -78,7 +78,11 @@ export function selectGeminiTransport(
     const transport = GEMINI_TRANSPORTS[id];
     if (transport.status === "experimental" && options.allowExperimental !== true) continue;
     if (options.available?.[id] !== true) continue;
-    return { transport, ready: true, fallbackUsed: id !== preferred };
+    return {
+      transport,
+      ready: true,
+      fallbackUsed: id !== preferred || transport.role !== "primary" || transport.requiresExplicitOptIn,
+    };
   }
 
   return {
