@@ -82,7 +82,7 @@ export function selectReasoningProvider(
     const provider = REASONING_PROVIDERS[id];
     if (provider.kind === "web-oracle" && options.allowWebOracle !== true) continue;
     if (options.available?.[id] !== true) continue;
-    return { provider, ready: true, fallbackUsed: id !== preferred };
+    return { provider, ready: true, fallbackUsed: id !== preferred || provider.role !== "primary" };
   }
 
   return {

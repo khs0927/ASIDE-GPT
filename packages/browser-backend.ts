@@ -91,13 +91,22 @@ export function selectBrowserBackend(
   for (const id of order) {
     const backend = BROWSER_BACKENDS[id];
     const remoteAvailable = id === "aside-remote" && options.asideRemoteAvailable === true;
-    const isAvailable = available[id] === true || remoteAvailable;
+    const isAvailable = id === "aside-remote" ? remoteAvailable : available[id] === true;
     if (!isAvailable) continue;
     if (backend.requiresExplicitOptIn && options.allowExternalFallback !== true) continue;
     return {
       backend,
       ready: true,
-      fallbackUsed: id !== preferred,
+      fallbackUsed: id !== preferred || backend.requiresExplicitOptIn,
+    };
+  }
+
+  if (available["aside-remote"] === true && options.asideRemoteAvailable !== true) {
+    return {
+      backend: BROWSER_BACKENDS["aside-remote"],
+      ready: false,
+      fallbackUsed: false,
+      blockedReason: "official-aside-access-required",
     };
   }
 
