@@ -59,7 +59,8 @@ Using another browser engine can be an explicitly requested fallback, but it mus
 - `packages/policies/`: task risk and confirmation rules.
 - `packages/approvals/`: approval boundaries retained for consequential actions.
 - `packages/evidence/`: evidence requirements for completed browser work.
-- `plugin/skills/`: mobile workflow skills, including `aside-remote` and `orchestration`.
+- `packages/decisions/`: optional typed semantic decision adapter for Jev 1.13; it does not perform browser work or replace the main model.
+- `plugin/skills/`: mobile workflow skills, including `aside-remote`, `orchestration`, and `jev-decision`.
 - `providers/aside/`: verified capability record and activation boundary.
 - `legacy/local-node/`: archived first prototype that required a PC/local Aside process. It is not part of the target architecture.
 
@@ -111,6 +112,7 @@ The CI suite verifies that:
 - approval is bound to the exact canonical action and provider acknowledgement.
 - secure sign-in cannot accept chat secrets.
 - completion requires matching Aside run evidence.
+- Jev requests use the dedicated System One contract and never masquerade as chat or browser execution.
 - all plugin skills validate and TypeScript builds cleanly.
 
 ## Activation
@@ -128,3 +130,7 @@ When Aside publishes or grants the official remote integration contract, impleme
 Then run the no-PC smoke tests in [docs/REMOTE_ACTIVATION_CHECKLIST.md](docs/REMOTE_ACTIVATION_CHECKLIST.md) and the release gates in [docs/ORCHESTRATION.md](docs/ORCHESTRATION.md).
 
 Until then the repository is complete up to the official vendor integration boundary. The missing piece is not another browser implementation; it is access to Aside's already-advertised remote/cloud control surface.
+
+## Optional Jev decision plane
+
+ASIDE-GPT also includes a typed Jev 1.13 adapter for bounded `choice`, `noul`, and `score` decisions. Jev is a hosted decision model, not a chat model and not a browser provider. The main planner and the official Aside Browser Agent remain responsible for reasoning, browsing, tool use, explanations, and side effects. See [docs/JEV_DECISION_PROVIDER.md](docs/JEV_DECISION_PROVIDER.md).

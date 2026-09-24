@@ -1,4 +1,5 @@
 export * from "./approvals/index.js";
+export * from "./decisions/index.js";
 export * from "./evidence/index.js";
 export * from "./integration/index.js";
 export * from "./orchestration/index.js";
