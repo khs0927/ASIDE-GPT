@@ -11,6 +11,7 @@ export * from "./runtime/index.js";
 export * from "./runtime/dispatcher.js";
 export * from "./schemas/index.js";
 export * from "./gemini-web/index.js";
+export * from "./gemini-web/provider.js";
 export * from "./browser-backend.js";
 export * from "./reasoning-providers.js";
 export * from "./gemini-transports.js";
