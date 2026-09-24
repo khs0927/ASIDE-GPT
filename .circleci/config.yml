@@ -1,0 +1,30 @@
+version: 2.1
+
+orbs:
+  node: circleci/node@7.1.0
+
+jobs:
+  verify:
+    docker:
+      - image: cimg/node:22.13
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Typecheck
+          command: npm run typecheck
+      - run:
+          name: Test
+          command: npm test
+      - run:
+          name: Validate skills
+          command: npm run check:skills
+      - run:
+          name: Build
+          command: npm run build
+
+workflows:
+  ci:
+    jobs:
+      - verify

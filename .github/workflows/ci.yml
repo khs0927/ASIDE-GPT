@@ -1,23 +1,13 @@
-name: CI
+# CI moved to CircleCI — see .circleci/config.yml
+# This workflow is disabled to avoid GitHub Actions minute consumption on private repos.
+
+name: CI (disabled)
 
 on:
-  push:
-  pull_request:
-
-permissions:
-  contents: read
+  workflow_dispatch:
 
 jobs:
-  verify:
+  noop:
     runs-on: ubuntu-latest
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-      - name: Install dependencies
-        run: npm install --no-audit --no-fund
-      - name: Run verification suite
-        run: npm run ci
+      - run: echo "CI moved to CircleCI"
