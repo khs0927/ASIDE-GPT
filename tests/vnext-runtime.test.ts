@@ -81,6 +81,17 @@ test("local reasoning is preferred and Gemini web is advisory only", () => {
   assert.equal(oracle.provider.role, "advisory");
 });
 
+test("agy is an explicit subscription reasoning provider", () => {
+  const selected = selectReasoningProvider({
+    preferred: "agy",
+    available: { agy: true },
+  });
+  assert.equal(selected.provider.id, "agy");
+  assert.equal(selected.provider.kind, "subscription");
+  assert.equal(selected.ready, true);
+  assert.equal(selected.fallbackUsed, false);
+});
+
 test("Gemini web transport defaults to mcp-web-llm and isolates experiments", () => {
   const primary = selectGeminiTransport({
     available: { "mcp-web-llm": true, "gemini-web2api-go": true },

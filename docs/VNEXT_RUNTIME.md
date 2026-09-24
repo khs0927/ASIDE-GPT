@@ -75,3 +75,26 @@ const result = await provider.ask({
 ```
 
 The adapter preserves provenance as `executor: "aside-gemini"` and `transport: "openai-compatible"`. It must not be relabeled as an Aside executor because the browser and Gemini routing are performed by the separate bridge. The provider is advisory and does not authorize browser actions.
+
+
+## Antigravity CLI provider
+
+`agy` is registered as an explicit external subscription reasoning provider. It is not inserted into Aside's built-in model picker because it is a separate CLI, not an official Aside model provider.
+
+The bridge model name is:
+
+```text
+agy
+```
+
+Example:
+
+```ts
+const result = await provider.ask({
+  prompt: "Return exactly: ASIDE_AGY_OK",
+  mode: "oracle",
+  model: "agy",
+});
+```
+
+The host must install and authenticate `agy` separately. ASIDE-GPT records the execution provenance as `aside-gemini`, not as a built-in Aside model.

@@ -3,6 +3,7 @@ export type ReasoningProviderId =
   | "lm-studio"
   | "chatgpt-subscription"
   | "claude-subscription"
+  | "agy"
   | "gemini-web-oracle";
 
 export interface ReasoningProviderInfo {
@@ -42,6 +43,13 @@ export const REASONING_PROVIDERS: Readonly<Record<ReasoningProviderId, Reasoning
     requiresApiKey: false,
     notes: "Existing Claude subscription path when the host supports it.",
   },
+  agy: {
+    id: "agy",
+    kind: "subscription",
+    role: "primary",
+    requiresApiKey: false,
+    notes: "Official Antigravity CLI subscription path exposed through the aside-gemini bridge.",
+  },
   "gemini-web-oracle": {
     id: "gemini-web-oracle",
     kind: "web-oracle",
@@ -56,6 +64,7 @@ const DEFAULT_ORDER: readonly ReasoningProviderId[] = [
   "lm-studio",
   "chatgpt-subscription",
   "claude-subscription",
+  "agy",
   "gemini-web-oracle",
 ];
 
