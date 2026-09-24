@@ -22,7 +22,10 @@ User goal
 - optional `Authorization: Bearer` support for authenticated OpenCode or TypeSafe access;
 - bounded HTTP error reporting;
 - request validation before network access;
-- no logging or persistence of credentials.
+- no logging or persistence of credentials;
+- structured browser handoff checkpoints that preserve tab context while explicitly requiring a fresh Aside snapshot.
+
+Every direct request must include `model`. Use `jev-1.13-free` with OpenCode Zen and `jev-1.13.0` with TypeSafe direct access. A conversational prompt or a request without `model` is invalid and may return HTTP 401 or 422.
 
 The default model is `jev-1.13-free`. The default endpoint is `https://opencode.ai/zen/v1/systemone`. Anonymous Zen Free access was verified on 2026-09-24, but the official documentation describes the free model as limited-time. A production deployment should therefore support an authenticated endpoint and fail clearly if anonymous access is withdrawn.
 
@@ -79,6 +82,19 @@ Verified response values from the anonymous Zen Free endpoint:
 ```
 
 These values are an integration smoke test, not a benchmark or a universal confidence threshold.
+
+## Browser workflow checkpoint
+
+When a Jev decision informs a browser task, preserve the existing browser tab and create `createJevDecisionCheckpoint(...)` before resuming. The checkpoint records:
+
+- the source tab ID, URL, and page title when available;
+- the purpose of the judgment;
+- the model and typed answers returned by Jev;
+- the next official Aside action;
+- `requiresFreshSnapshot: true`;
+- `browserActionAuthorized: false`.
+
+After the decision, reattach to the same tab, take a fresh snapshot, and continue through the official Aside workflow. If Jev returns HTTP 401 or 422, correct the endpoint/model pair and rebuild the System One request without changing tabs or repeating browser actions. A Jev result is advisory classification evidence, not permission to submit, save, send, purchase, or otherwise mutate a page.
 
 ## Why Jev is not the main model
 

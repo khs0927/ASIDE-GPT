@@ -58,19 +58,49 @@ export interface JevDecisionProviderOptions {
   fetchImpl?: typeof fetch;
 }
 
+export interface JevBrowserSourceContext {
+  tabId?: string;
+  url?: string;
+  pageTitle?: string;
+}
+
+export interface JevDecisionCheckpointInput {
+  purpose: string;
+  source?: JevBrowserSourceContext;
+  response: JevDecisionResponse;
+  nextAsideAction: string;
+  observedAt?: string;
+}
+
+export interface JevDecisionCheckpoint {
+  kind: "jev-decision-checkpoint";
+  purpose: string;
+  source?: JevBrowserSourceContext;
+  model: string;
+  answers: Readonly<Record<string, JevAnswer>>;
+  nextAsideAction: string;
+  observedAt: string;
+  requiresFreshSnapshot: true;
+  browserActionAuthorized: false;
+}
+
+export const JEV_ZEN_ENDPOINT = "https://opencode.ai/zen/v1/systemone";
+export const JEV_ZEN_FREE_MODEL = "jev-1.13-free";
+export const JEV_TYPESAFE_ENDPOINT = "https://api.typesafe.ai/v1/systemone";
+export const JEV_TYPESAFE_MODEL = "jev-1.13.0";
+
 export class JevApiError extends Error {
   constructor(
     message: string,
     readonly status: number,
     readonly responseBody: string,
+    readonly endpoint: string,
+    readonly model: string,
   ) {
     super(message);
     this.name = "JevApiError";
   }
 }
-
-const DEFAULT_ENDPOINT = "https://opencode.ai/zen/v1/systemone";
-const DEFAULT_MODEL = "jev-1.13-free";
 
 function assertQuestions(questions: JevQuestions): void {
   const entries = Object.entries(questions);
@@ -106,8 +136,8 @@ export class JevDecisionProvider {
   private readonly fetchImpl: typeof fetch;
 
   constructor(options: JevDecisionProviderOptions = {}) {
-    this.endpoint = options.endpoint ?? DEFAULT_ENDPOINT;
-    this.model = options.model ?? DEFAULT_MODEL;
+    this.endpoint = options.endpoint ?? JEV_ZEN_ENDPOINT;
+    this.model = options.model ?? JEV_ZEN_FREE_MODEL;
     this.apiKey = options.apiKey;
     this.timeoutMs = options.timeoutMs ?? 120_000;
     this.fetchImpl = options.fetchImpl ?? fetch;
@@ -136,9 +166,11 @@ export class JevDecisionProvider {
 
     if (!response.ok) {
       throw new JevApiError(
-        `Jev request failed with HTTP ${response.status}`,
+        `Jev request failed with HTTP ${response.status} for model ${this.model}`,
         response.status,
         responseBody.slice(0, 2_000),
+        this.endpoint,
+        this.model,
       );
     }
 
@@ -154,6 +186,32 @@ export class JevDecisionProvider {
     }
     return parsed;
   }
+}
+
+export function createJevDecisionCheckpoint(
+  input: JevDecisionCheckpointInput,
+): JevDecisionCheckpoint {
+  if (!input.purpose.trim()) {
+    throw new Error("Jev checkpoint requires a purpose");
+  }
+  if (!input.nextAsideAction.trim()) {
+    throw new Error("Jev checkpoint requires the next official Aside action");
+  }
+
+  const checkpoint: JevDecisionCheckpoint = {
+    kind: "jev-decision-checkpoint",
+    purpose: input.purpose,
+    model: input.response.model,
+    answers: input.response.answers,
+    nextAsideAction: input.nextAsideAction,
+    observedAt: input.observedAt ?? new Date().toISOString(),
+    requiresFreshSnapshot: true,
+    browserActionAuthorized: false,
+  };
+  if (input.source) {
+    checkpoint.source = input.source;
+  }
+  return checkpoint;
 }
 
 function isJevDecisionResponse(value: unknown): value is JevDecisionResponse {

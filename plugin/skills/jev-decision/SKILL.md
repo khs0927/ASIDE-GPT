@@ -17,10 +17,12 @@ Use Jev as a typed decision function inside a broader ASIDE-GPT workflow. Jev do
    - `choice` for one of a defined option set;
    - `noul` for the probability that one statement is true;
    - `score` for an ordered, concrete rubric.
-4. Send independent questions together through the dedicated System One adapter. Do not send a normal chat-completions prompt to Jev.
+4. Send independent questions together through the dedicated System One adapter. Every direct `/systemone` request must explicitly include `model`: use `jev-1.13-free` with OpenCode Zen and `jev-1.13.0` with the direct TypeSafe endpoint. Do not send a normal chat-completions prompt to Jev.
 5. Inspect the returned probabilities and confidence. Threshold in code, not in prose.
-6. Route uncertain or consequential results to the current general model, the official Aside workflow, or a human for confirmation.
-7. Report the model version, typed answer, probabilities/confidence, and the reason for any escalation. Never claim that a decision itself is proof of correctness.
+6. If browser work will follow, preserve the current tab and create a Jev decision checkpoint containing the source tab identity/URL, purpose, requested/returned model, typed answers, and next official Aside action.
+7. Reattach to the same tab, take a fresh snapshot, and resume through the official Aside workflow. Jev output never authorizes the browser action by itself.
+8. Route uncertain or consequential results to the current general model, the official Aside workflow, or a human for confirmation.
+9. Report the model version, typed answer, probabilities/confidence, and the reason for any escalation. Never claim that a decision itself is proof of correctness.
 
 ## Limits
 
@@ -28,6 +30,7 @@ Use Jev as a typed decision function inside a broader ASIDE-GPT workflow. Jev do
 - `jev-1.13-free` through OpenCode Zen is limited-time. If anonymous access stops, require a supported OpenCode or TypeSafe provider key configured outside chat. Never paste or persist a key in conversation.
 - English is the primary supported language. Korean and other CJK inputs work in testing, but validate representative domain cases and confidence before relying on them.
 - Jev must not replace the official Aside browser provider and must never be labeled as browser execution.
+- On HTTP 401 or 422, do not change browser tabs or retry the browser action. Verify the endpoint/model pair, rebuild the System One request with an explicit model, and then resume from the unchanged browser state.
 
 ## Safety and confirmation
 
