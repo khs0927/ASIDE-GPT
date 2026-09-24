@@ -12,9 +12,18 @@ import { createServer, type Server } from "node:http";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { after, before, test } from "node:test";
+import { chromium } from "playwright-core";
 import { GeminiWebBackend } from "../../packages/gemini-bridge/gemini-web.js";
 
-const CHROME = [process.env.CHROME_PATH, "/opt/pw-browsers/chromium", "/usr/bin/chromium", "/usr/bin/google-chrome"].find(
+function playwrightChromium(): string | undefined {
+  try {
+    return chromium.executablePath();
+  } catch {
+    return undefined;
+  }
+}
+
+const CHROME = [process.env.CHROME_PATH, playwrightChromium(), "/usr/bin/chromium", "/usr/bin/google-chrome"].find(
   (path): path is string => Boolean(path && existsSync(path)),
 );
 
@@ -44,11 +53,24 @@ before(async () => {
   profile = await mkdtemp(join(tmpdir(), "aside-gpt-chrome-"));
   chrome = spawn(
     CHROME,
-    ["--headless=new", "--no-sandbox", "--disable-gpu", "--remote-debugging-port=0", `--user-data-dir=${profile}`, "about:blank"],
-    { stdio: "ignore" },
+    [
+      "--headless=new",
+      "--no-sandbox",
+      "--disable-gpu",
+      "--disable-dev-shm-usage",
+      "--remote-debugging-port=0",
+      `--user-data-dir=${profile}`,
+      "about:blank",
+    ],
+    { stdio: ["ignore", "ignore", "pipe"] },
   );
+  let stderr = "";
+  chrome.stderr?.on("data", (chunk: Buffer) => (stderr += chunk.toString()));
   const portFile = join(profile, "DevToolsActivePort");
-  for (let i = 0; i < 100 && !existsSync(portFile); i += 1) await new Promise((r) => setTimeout(r, 100));
+  for (let i = 0; i < 300 && !existsSync(portFile) && chrome.exitCode === null; i += 1) {
+    await new Promise((r) => setTimeout(r, 100));
+  }
+  assert.ok(existsSync(portFile), `Chromium (${CHROME}) did not open a DevTools port:\n${stderr.slice(-2000)}`);
   const port = (await readFile(portFile, "utf8")).split("\n")[0];
   cdpUrl = `http://127.0.0.1:${port}`;
 });
