@@ -31,7 +31,30 @@ The implementation plan borrows patterns, not runtime dependencies, from current
 
 ASIDE-GPT does not vendor those browser engines because Aside itself remains the executor.
 
-## Phase 1 — direct Gemini chat
+## Aside oracle mode
+
+The intended high-value path is not only "ask Gemini and return its answer". Aside can use Gemini Web as a bounded reasoning subcall while it continues to own browser execution.
+
+```text
+Aside task
+   |
+   +--> needs extra reasoning
+   |        |
+   |        v
+   |   Gemini background tab
+   |        |
+   |        v
+   |   Gemini response
+   |        |
+   +<-------+
+   |
+   v
+Aside continues the original task
+```
+
+The Gemini response is advisory context only. It does not inherit browser authority and cannot bypass the original task's approval or privacy boundary.
+
+## Phase 1 — direct Gemini chat + oracle subcall
 
 Acceptance criteria:
 
@@ -41,6 +64,7 @@ Acceptance criteria:
 4. If a model is explicitly requested, Aside selects it and verifies the visible label.
 5. Visible Gemini usage-limit/cooldown messages produce a clean `blocked` result and no retry loop.
 6. The returned result identifies `provider=gemini-web` and `executor=aside`.
+7. Oracle mode can return to the original task without losing the original tab/task state.
 
 ## Phase 2 — reliability
 
@@ -94,3 +118,20 @@ Never use browser cookies or Google session tokens as application credentials. D
 `gemini-web` is a target-site skill, not a new browser provider. The browser provider remains `aside-remote`; Gemini is simply the website that Aside operates.
 
 This preserves the repository's rule that ASIDE-GPT success means the actual browser work is performed by Aside.
+
+## Oracle smoke test
+
+```text
+Keep this task in Aside. Open Gemini in a separate background tab and ask:
+"Give exactly three concise checks for verifying that a web form was submitted successfully. Do not ask for credentials."
+
+Capture Gemini's answer, return to the original task, and report:
+- provider=gemini-web
+- executor=aside
+- visible model label
+- the three checks
+
+Do not perform any form submission during this smoke test.
+```
+
+Pass condition: Aside obtains the Gemini answer and returns to the original task context without giving Gemini browser authority.
