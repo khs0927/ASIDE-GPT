@@ -10,3 +10,4 @@ export * from "./providers/remote-contract.js";
 export * from "./runtime/index.js";
 export * from "./runtime/dispatcher.js";
 export * from "./schemas/index.js";
+export * from "./gemini-web/index.js";
