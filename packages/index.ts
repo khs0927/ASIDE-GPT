@@ -15,3 +15,4 @@ export * from "./browser-backend.js";
 export * from "./reasoning-providers.js";
 export * from "./gemini-transports.js";
 export * from "./local-model.js";
+export * from "./gemini-bridge/index.js";

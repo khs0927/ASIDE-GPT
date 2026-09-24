@@ -81,12 +81,23 @@ test("local reasoning is preferred and Gemini web is advisory only", () => {
   assert.equal(oracle.provider.role, "advisory");
 });
 
-test("Gemini web transport defaults to mcp-web-llm and isolates experiments", () => {
+test("Gemini web transport defaults to the built-in bridge and isolates experiments", () => {
   const primary = selectGeminiTransport({
-    available: { "mcp-web-llm": true, "gemini-web2api-go": true },
+    available: { "gemini-web-cdp": true, "mcp-web-llm": true, "gemini-web2api-go": true },
   });
-  assert.equal(primary.transport.id, "mcp-web-llm");
+  assert.equal(primary.transport.id, "gemini-web-cdp");
+  assert.equal(primary.transport.status, "built-in");
   assert.equal(primary.fallbackUsed, false);
+
+  const official = selectGeminiTransport({
+    available: { "antigravity-cli": true, "mcp-web-llm": true },
+  });
+  assert.equal(official.transport.id, "antigravity-cli");
+  assert.equal(official.fallbackUsed, true);
+
+  const external = selectGeminiTransport({ preferred: "mcp-web-llm", available: { "mcp-web-llm": true } });
+  assert.equal(external.transport.id, "mcp-web-llm");
+  assert.equal(external.fallbackUsed, false);
 
   const experimental = selectGeminiTransport({
     preferred: "gemini-web2api-go",

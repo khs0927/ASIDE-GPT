@@ -1,4 +1,12 @@
-# Project Status — 2026-09-12
+# Project Status — 2026-09-24
+
+## Local-first runtime (current focus)
+
+- Runnable Gemini bridge in `packages/gemini-bridge/`: Gemini Web over a dedicated Chrome profile, Antigravity CLI fallback, OpenAI-compatible server, stdio MCP server, and `aside-gpt` CLI (`chrome`, `ask`, `serve`, `mcp`, `doctor`, `probe-aside`, `setup-agy`). See [LOCAL_BRIDGE.md](LOCAL_BRIDGE.md).
+- Verified in CI against a Gemini fixture in headless Chromium; not yet verified against a live signed-in Gemini session.
+- Open measurements: whether `aside repl` / `aside mcp` consume credits (`aside-gpt probe-aside`), and the exact `agy` flags on the user's version.
+
+## Remote track (2026-09-12)
 
 ## Done
 

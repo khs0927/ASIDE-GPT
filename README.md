@@ -1,21 +1,36 @@
 # ASIDE-GPT
 
-ASIDE-GPT exists for one purpose: **use the official Aside Browser Agent from mobile ChatGPT without requiring the user's PC to stay online.**
+ASIDE-GPT is a **local-first orchestrator** for the official Aside browser agent. It uses free or already-paid paths first (local models, existing subscriptions, the signed-in Gemini website) and keeps the official Aside Remote API as a future track instead of a prerequisite.
 
-It is not a new browser engine and it must not silently replace Aside with ChatGPT Work's browser.
-
-```mermaid
-flowchart TD
-    M[ChatGPT Mobile] --> O[ASIDE-GPT orchestrator]
-    O --> G[Provider gate]
-    G --> R[Durable task runtime]
-    R --> A[Official Aside remote/cloud control plane]
-    A --> B[Aside Browser Agent]
-    B --> W[Websites and logged-in services]
-    A --> O
+```text
+ASIDE-GPT
+├─ Model runtime      Ollama / LM Studio · ChatGPT/Claude subscriptions · Gemini (AI Pro) via web or agy
+├─ Browser runtime    Aside REPL → Aside agent → Browser Control / Playwright MCP (opt-in) → Aside Remote (future)
+└─ Gemini transport   built-in Gemini Web bridge → Antigravity CLI → mcp-web-llm → hermes-gem-pw → web2api (experimental)
 ```
 
-## Current verified state
+If one provider is blocked (AI Studio 429, Aside credits 402, a Gemini UI change, no Remote API), the others keep working.
+
+## Quick start: Gemini from your AI Pro subscription
+
+```bash
+npm ci && npm run build && npm link      # Windows: scripts\install.ps1
+aside-gpt chrome                         # dedicated Chrome profile; sign in to Gemini once
+aside-gpt doctor
+aside-gpt ask "Reply with only: ASIDE_GEMINI_OK"
+aside-gpt serve                          # OpenAI-compatible API at http://127.0.0.1:8765/v1
+aside-gpt mcp                            # MCP tools: gemini_ask, gemini_status
+aside-gpt setup-agy                      # let Antigravity use Aside (aside mcp) and Gemini Web together
+aside-gpt probe-aside                    # measure whether Aside REPL calls hit credit limits
+```
+
+Aside's model settings do not document Ollama/LM Studio/custom endpoints, so Gemini cannot run *inside* Aside today. Instead Gemini (through `agy` or any MCP host) drives Aside as a tool via `aside mcp`, and calls `gemini_ask` for a second opinion. Details, configuration, security boundaries, and what is not yet verified against production: [docs/LOCAL_BRIDGE.md](docs/LOCAL_BRIDGE.md). Runtime selection rules: [docs/VNEXT_RUNTIME.md](docs/VNEXT_RUNTIME.md).
+
+## Aside Remote (future track)
+
+The original goal — run Aside from mobile ChatGPT without a PC online — still depends on Aside publishing its remote contract. That track is kept, fail-closed, below.
+
+### Current verified state
 
 Official Aside product material currently verifies remote/cloud capabilities:
 
@@ -70,7 +85,7 @@ The orchestrator is safe to construct without a provider adapter: it performs no
 
 A target-site skill for using the signed-in Gemini website through Aside is available at `plugin/skills/gemini-web/SKILL.md`.
 
-This path keeps Aside as the browser executor and treats Gemini as the website being operated. It does not add a second Playwright runtime, reuse Google cookies as API credentials, or route through AI Studio/Antigravity. See [docs/GEMINI_WEB_ASIDE.md](docs/GEMINI_WEB_ASIDE.md) for rollout and smoke tests.
+This skill keeps Aside as the browser executor and treats Gemini as the website being operated. The separate local bridge (`aside-gpt ask|serve|mcp`, see [docs/LOCAL_BRIDGE.md](docs/LOCAL_BRIDGE.md)) drives its own dedicated Chrome profile and can fall back to Antigravity; neither path reuses Google cookies as API credentials or calls AI Studio. See [docs/GEMINI_WEB_ASIDE.md](docs/GEMINI_WEB_ASIDE.md) for rollout and smoke tests.
 
 ## Orchestration behavior
 
@@ -87,7 +102,9 @@ The active flow is:
 9. reject chat-based secret entry for sign-in;
 10. require matching Aside task/result evidence before success.
 
-## Explicitly not required by the target architecture
+## Explicitly not required by the Remote track
+
+These apply to the mobile Remote track only. The local-first runtime above deliberately runs on the user's PC, uses a loopback-only bridge, and drives a dedicated Chrome profile; it still never extracts cookies or passwords.
 
 ```text
 NO user PC requirement
