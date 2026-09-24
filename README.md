@@ -65,6 +65,12 @@ Using another browser engine can be an explicitly requested fallback, but it mus
 
 The orchestrator is safe to construct without a provider adapter: it performs no browser/network execution and returns `official-aside-access-required`. When a supported official `AsideRemoteAdapter` is supplied, the same planner becomes ready and browser work is routed through Aside.
 
+## Gemini Web through Aside
+
+A target-site skill for using the signed-in Gemini website through Aside is available at `plugin/skills/gemini-web/SKILL.md`.
+
+This path keeps Aside as the browser executor and treats Gemini as the website being operated. It does not add a second Playwright runtime, reuse Google cookies as API credentials, or route through AI Studio/Antigravity. See [docs/GEMINI_WEB_ASIDE.md](docs/GEMINI_WEB_ASIDE.md) for rollout and smoke tests.
+
 ## Orchestration behavior
 
 The active flow is:
