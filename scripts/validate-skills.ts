@@ -14,7 +14,7 @@ async function main(): Promise<void> {
 
   for (const name of entries) {
     const path = join(root, name, "SKILL.md");
-    const source = await readFile(path, "utf8");
+    const source = (await readFile(path, "utf8")).replace(/\r\n/g, "\n");
     if (!source.startsWith("---\n")) {
       throw new Error(`${path}: missing YAML front matter`);
     }
