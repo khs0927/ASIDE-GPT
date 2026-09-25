@@ -1,12 +1,14 @@
 import { randomUUID, timingSafeEqual } from "node:crypto";
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from "node:http";
 import type { GeminiRouter, RoutedResult } from "./router.js";
+import type { GeminiBackendId } from "./types.js";
 
 /**
  * OpenAI-compatible façade over the Gemini router.
  *
  * Model ids: "gemini-web" keeps the current Gemini mode; "gemini-web:<mode>"
- * selects a visible mode label first (e.g. "gemini-web:pro").
+ * selects a visible mode label first (e.g. "gemini-web:pro"); "agy" pins the
+ * Antigravity CLI backend with no fallback to Gemini Web.
  * Each request starts a new Gemini chat; prior turns are sent as a transcript.
  */
 
@@ -24,6 +26,7 @@ interface ChatMessage {
 }
 
 const BASE_MODEL = "gemini-web";
+const AGY_MODEL = "agy";
 
 export function messageText(content: unknown): string {
   if (typeof content === "string") return content;
@@ -49,8 +52,9 @@ export function messagesToPrompt(messages: readonly ChatMessage[]): string {
   ].join("\n\n");
 }
 
-export function parseModel(model: unknown): { id: string; mode?: string } {
+export function parseModel(model: unknown): { id: string; mode?: string; backend?: GeminiBackendId } {
   const id = typeof model === "string" && model.trim() ? model.trim() : BASE_MODEL;
+  if (id === AGY_MODEL) return { id, backend: "agy" };
   const match = /^gemini-web:(.+)$/.exec(id);
   return match?.[1] ? { id, mode: match[1] } : { id };
 }
@@ -92,7 +96,11 @@ function authorized(req: IncomingMessage, apiKey: string | undefined): boolean {
 
 export function createOpenAIServer(options: OpenAIServerOptions): Server {
   const maxBody = options.maxBodyBytes ?? 4 * 1024 * 1024;
-  const models = [BASE_MODEL, ...(options.modes ?? []).map((mode) => `${BASE_MODEL}:${mode}`)];
+  const models = [
+    BASE_MODEL,
+    ...(options.modes ?? []).map((mode) => `${BASE_MODEL}:${mode}`),
+    ...(options.router.backends.some((backend) => backend.id === "agy") ? [AGY_MODEL] : []),
+  ];
 
   return createServer((req, res) => {
     void handle(req, res).catch((error: unknown) => {
@@ -129,12 +137,12 @@ export function createOpenAIServer(options: OpenAIServerOptions): Server {
     }
     const prompt = messagesToPrompt(body.messages as ChatMessage[]);
     if (!prompt.trim() || prompt === "Assistant:") return sendError(res, 400, "messages contain no text");
-    const { id: model, mode } = parseModel(body.model);
+    const { id: model, mode, backend } = parseModel(body.model);
     const completionId = `chatcmpl-${randomUUID()}`;
     const created = Math.floor(Date.now() / 1000);
 
     if (body.stream !== true) {
-      const result = await options.router.ask({ prompt, mode });
+      const result = await options.router.ask({ prompt, mode }, backend);
       if (result.status !== "completed") return sendError(res, statusFor(result), result.notes.join("; "), "upstream_error");
       return sendJson(res, 200, {
         id: completionId,
@@ -161,7 +169,7 @@ export function createOpenAIServer(options: OpenAIServerOptions): Server {
         sent = text;
       }
     };
-    const result = await options.router.ask({ prompt, mode, onProgress: emit });
+    const result = await options.router.ask({ prompt, mode, onProgress: emit }, backend);
     if (result.status === "completed") {
       const final = result.text ?? "";
       if (final.startsWith(sent)) emit(final);

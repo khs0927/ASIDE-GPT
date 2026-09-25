@@ -15,7 +15,8 @@ BrowserBackend
 ReasoningProvider
   1. Ollama / LM Studio      local and API-key-free where available
   2. ChatGPT / Claude        existing subscription paths when host-supported
-  3. Gemini Web Oracle       bounded advisory subcall, never the main planner
+  3. agy                     Antigravity CLI subscription via the local bridge
+  4. Gemini Web Oracle       bounded advisory subcall, never the main planner
 
 GeminiTransport
   1. gemini-web-cdp          built-in bridge (packages/gemini-bridge), dedicated Chrome profile over loopback CDP
@@ -100,5 +101,7 @@ const result = await provider.ask({
   model: "agy",
 });
 ```
+
+The built-in bridge (`aside-gpt serve`, see [LOCAL_BRIDGE.md](LOCAL_BRIDGE.md)) advertises `agy` on `/v1/models` when the agy backend is enabled and pins `model: "agy"` to that backend with no fallback to Gemini Web. Any other model id (`auto`, `gemini-web`, `gemini-web:<mode>`) follows the `ASIDE_GEMINI_BACKENDS` order.
 
 The host must install and authenticate `agy` separately. ASIDE-GPT records the execution provenance as `aside-gemini`, not as a built-in Aside model.

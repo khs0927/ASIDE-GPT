@@ -13,6 +13,7 @@ import {
   createOpenAIServer,
   GeminiRouter,
   GeminiWebBackend,
+  GeminiWebProvider,
   handleMcpMessage,
   loadConfig,
   mergeMcpConfig,
@@ -163,6 +164,32 @@ test("OpenAI server lists models, completes, maps errors, and enforces the API k
 
     const bad = await fetch(`${base}/v1/chat/completions`, { method: "POST", headers, body: "{" });
     assert.equal(bad.status, 400);
+  });
+});
+
+test("OpenAI server pins model agy to the agy backend for GeminiWebProvider", async () => {
+  const web = new FakeBackend("gemini-web", () => ({ text: "from web" }));
+  const agy = new FakeBackend("agy", (request) => ({ text: `agy:${request.prompt}` }));
+  await withServer(new GeminiRouter([web, agy]), undefined, async (base) => {
+    const models = (await (await fetch(`${base}/v1/models`)).json()) as { data: Array<{ id: string }> };
+    assert.deepEqual(models.data.map((model) => model.id), ["gemini-web", "gemini-web:pro", "agy"]);
+
+    const provider = new GeminiWebProvider({ baseUrl: `${base}/v1` });
+    const result = await provider.ask({ prompt: "Return exactly: ASIDE_AGY_OK", mode: "oracle", model: "agy" });
+    assert.equal(result.executor, "aside-gemini");
+    assert.equal(result.response, "agy:Return exactly: ASIDE_AGY_OK");
+    assert.equal(web.calls.length, 0);
+    assert.equal(agy.calls.length, 1);
+  });
+
+  await withServer(new GeminiRouter([web]), undefined, async (base) => {
+    const response = await fetch(`${base}/v1/chat/completions`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ model: "agy", messages: [{ role: "user", content: "q" }] }),
+    });
+    assert.equal(response.status, 502);
+    assert.equal(web.calls.length, 0);
   });
 });
 

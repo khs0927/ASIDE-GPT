@@ -1,9 +1,10 @@
-import type {
-  GeminiAskRequest,
-  GeminiAskResult,
-  GeminiBackend,
-  GeminiBackendId,
-  GeminiBackendStatus,
+import {
+  failure,
+  type GeminiAskRequest,
+  type GeminiAskResult,
+  type GeminiBackend,
+  type GeminiBackendId,
+  type GeminiBackendStatus,
 } from "./types.js";
 
 export interface RoutedResult extends GeminiAskResult {
@@ -21,10 +22,15 @@ export class GeminiRouter {
     if (backends.length === 0) throw new Error("GeminiRouter needs at least one backend");
   }
 
-  async ask(request: GeminiAskRequest): Promise<RoutedResult> {
+  /** Pass `only` to pin one backend (e.g. model "agy") with no fallthrough. */
+  async ask(request: GeminiAskRequest, only?: GeminiBackendId): Promise<RoutedResult> {
+    const candidates = only ? this.backends.filter((backend) => backend.id === only) : this.backends;
+    if (candidates.length === 0) {
+      return { ...failure(only as GeminiBackendId, "error", `backend ${only} is not enabled`, Date.now()), attempts: [] };
+    }
     const attempts: RoutedResult["attempts"] = [];
     let last: GeminiAskResult | undefined;
-    for (const backend of this.backends) {
+    for (const backend of candidates) {
       let streamed = false;
       const result = await backend.ask({
         ...request,

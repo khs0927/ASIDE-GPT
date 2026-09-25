@@ -51,8 +51,9 @@ During development, `npm run cli -- <command>` runs the TypeScript source direct
 
 ### OpenAI-compatible server
 
-- `GET /v1/models` → `gemini-web`, `gemini-web:pro`, `gemini-web:thinking`, `gemini-web:fast`.
+- `GET /v1/models` → `gemini-web`, `gemini-web:pro`, `gemini-web:thinking`, `gemini-web:fast`, plus `agy` when the agy backend is enabled.
 - `POST /v1/chat/completions` with `stream: true|false`. `gemini-web:<mode>` selects that visible mode first; an unknown mode fails instead of silently using another model.
+- `model: "agy"` runs only the Antigravity CLI backend (no Gemini Web fallback); this is the id `GeminiWebProvider` uses for the `agy` reasoning provider.
 - Each request opens a new Gemini chat; earlier turns are sent as a transcript. The response carries a non-standard `gemini` field with the backend, conversation URL, sources, and attempts.
 - Errors: usage limit → 429, signed out → 401, other → 502.
 - Binds to `127.0.0.1`. Listening on any other interface is refused unless `ASIDE_GEMINI_API_KEY` is set, and then a bearer token is required.
