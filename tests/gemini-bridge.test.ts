@@ -111,8 +111,10 @@ test("messages collapse into one prompt; model ids carry the mode", () => {
     ]),
     "System: be brief\n\nUser: hi\n\nAssistant:",
   );
-  assert.deepEqual(parseModel("gemini-web:pro"), { id: "gemini-web:pro", mode: "pro" });
-  assert.deepEqual(parseModel(undefined), { id: "gemini-web" });
+  assert.deepEqual(parseModel("auto"), { id: "gemini-web", backend: "gemini-web" });
+  assert.deepEqual(parseModel("gemini-web:pro"), { id: "gemini-web:pro", mode: "pro", backend: "gemini-web" });
+  assert.deepEqual(parseModel(undefined), { id: "gemini-web", backend: "gemini-web" });
+  assert.deepEqual(parseModel("agy"), { id: "agy", backend: "agy" });
 });
 
 async function withServer(
@@ -139,7 +141,7 @@ test("OpenAI server lists models, completes, maps errors, and enforces the API k
     assert.equal((await fetch(`${base}/v1/models`)).status, 401);
 
     const models = (await (await fetch(`${base}/v1/models`, { headers })).json()) as { data: Array<{ id: string }> };
-    assert.deepEqual(models.data.map((model) => model.id), ["gemini-web", "gemini-web:pro"]);
+    assert.deepEqual(models.data.map((model) => model.id), ["auto", "gemini-web", "gemini-web:pro"]);
 
     const ok = await fetch(`${base}/v1/chat/completions`, {
       method: "POST",
@@ -169,7 +171,7 @@ test("OpenAI server rejects agy models on the Gemini Web bridge", async () => {
   const agy = new FakeBackend("agy", (request) => ({ text: `agy:${request.prompt}` }));
   await withServer(new GeminiRouter([web, agy]), undefined, async (base) => {
     const models = (await (await fetch(`${base}/v1/models`)).json()) as { data: Array<{ id: string }> };
-    assert.deepEqual(models.data.map((model) => model.id), ["gemini-web", "gemini-web:pro"]);
+    assert.deepEqual(models.data.map((model) => model.id), ["auto", "gemini-web", "gemini-web:pro", "agy"]);
 
     const provider = new GeminiWebProvider({ baseUrl: `${base}/v1` });
     const rejected = await provider.ask({ prompt: "Return exactly: ASIDE_AGY_OK", mode: "oracle", model: "agy" });
