@@ -259,11 +259,13 @@ test("MCP stdio loop answers newline-delimited JSON-RPC", async () => {
   const router = new GeminiRouter([new FakeBackend("gemini-web", () => ({ text: "x" }))]);
   const input = new PassThrough();
   const output = new PassThrough();
+  const chunks: string[] = [];
+  output.on("data", (chunk) => chunks.push(chunk.toString()));
   const done = serveMcp(router, input, output);
   input.write(`${JSON.stringify({ jsonrpc: "2.0", id: 1, method: "ping" })}\nnot json\n`);
   input.end();
   await done;
-  const lines: string[] = (output.read() as Buffer | null)?.toString().trim().split("\n") ?? [];
+  const lines: string[] = chunks.join("").trim().split("\n");
   assert.equal(lines.length, 2);
   const parsed = lines.map((line) => JSON.parse(line) as { id: number | null; error?: { code: number } });
   assert.ok(parsed.some((message) => message.id === 1));
