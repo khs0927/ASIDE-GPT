@@ -13,9 +13,9 @@ export interface RoutedResult extends GeminiAskResult {
 }
 
 /**
- * Tries backends in order and falls through on any non-completed result.
- * Once a backend has streamed partial text the router stops there, so a caller
- * never receives two different answers spliced together.
+ * Provider separation is strict. Without an explicit `only`, only the first
+ * configured backend is used; failures never silently fall through to another
+ * provider. Once a backend has streamed partial text the router stops there.
  */
 export class GeminiRouter {
   constructor(readonly backends: readonly GeminiBackend[]) {
@@ -24,7 +24,7 @@ export class GeminiRouter {
 
   /** Pass `only` to pin one backend (e.g. model "agy") with no fallthrough. */
   async ask(request: GeminiAskRequest, only?: GeminiBackendId): Promise<RoutedResult> {
-    const candidates = only ? this.backends.filter((backend) => backend.id === only) : this.backends;
+    const candidates = only ? this.backends.filter((backend) => backend.id === only) : this.backends.slice(0, 1);
     if (candidates.length === 0) {
       return { ...failure(only as GeminiBackendId, "error", `backend ${only} is not enabled`, Date.now()), attempts: [] };
     }

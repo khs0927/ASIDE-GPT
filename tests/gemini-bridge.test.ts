@@ -56,7 +56,7 @@ after(async () => {
 test("config defaults to gemini-web then agy and validates backend names", () => {
   const config = loadConfig({});
   assert.deepEqual(config.backends, ["gemini-web", "agy"]);
-  assert.equal(config.cdpUrl, "http://127.0.0.1:9222");
+  assert.equal(config.cdpUrl, "http://127.0.0.1:9223");
   assert.deepEqual(config.agyArgs, ["--print", "{prompt}"]);
   assert.deepEqual(loadConfig({ ASIDE_GEMINI_BACKENDS: "agy, gemini-web" }).backends, ["agy", "gemini-web"]);
   assert.throws(() => loadConfig({ ASIDE_GEMINI_BACKENDS: "gemini-web,web2api" }), /unknown backend "web2api"/);
@@ -73,17 +73,14 @@ test("the Chrome DevTools endpoint must stay on loopback", () => {
 // router
 // ---------------------------------------------------------------------------
 
-test("router falls through to the next backend on failure and records attempts", async () => {
+test("router fails closed instead of crossing provider boundaries", async () => {
   const web = new FakeBackend("gemini-web", () => ({ status: "blocked", notes: ["usage limit"] }));
   const agy = new FakeBackend("agy", (request) => ({ text: `agy:${request.prompt}` }));
   const result = await new GeminiRouter([web, agy]).ask({ prompt: "hi" });
-  assert.equal(result.status, "completed");
-  assert.equal(result.backend, "agy");
-  assert.equal(result.text, "agy:hi");
-  assert.deepEqual(result.attempts, [
-    { backend: "gemini-web", status: "blocked", note: "usage limit" },
-    { backend: "agy", status: "completed" },
-  ]);
+  assert.equal(result.status, "blocked");
+  assert.equal(result.backend, "gemini-web");
+  assert.equal(agy.calls.length, 0);
+  assert.deepEqual(result.attempts, [{ backend: "gemini-web", status: "blocked", note: "usage limit" }]);
 });
 
 test("router does not splice a second answer after partial streaming", async () => {
@@ -167,19 +164,18 @@ test("OpenAI server lists models, completes, maps errors, and enforces the API k
   });
 });
 
-test("OpenAI server pins model agy to the agy backend for GeminiWebProvider", async () => {
+test("OpenAI server rejects agy models on the Gemini Web bridge", async () => {
   const web = new FakeBackend("gemini-web", () => ({ text: "from web" }));
   const agy = new FakeBackend("agy", (request) => ({ text: `agy:${request.prompt}` }));
   await withServer(new GeminiRouter([web, agy]), undefined, async (base) => {
     const models = (await (await fetch(`${base}/v1/models`)).json()) as { data: Array<{ id: string }> };
-    assert.deepEqual(models.data.map((model) => model.id), ["gemini-web", "gemini-web:pro", "agy"]);
+    assert.deepEqual(models.data.map((model) => model.id), ["gemini-web", "gemini-web:pro"]);
 
     const provider = new GeminiWebProvider({ baseUrl: `${base}/v1` });
-    const result = await provider.ask({ prompt: "Return exactly: ASIDE_AGY_OK", mode: "oracle", model: "agy" });
-    assert.equal(result.executor, "aside-gemini");
-    assert.equal(result.response, "agy:Return exactly: ASIDE_AGY_OK");
-    assert.equal(web.calls.length, 0);
-    assert.equal(agy.calls.length, 1);
+    const rejected = await provider.ask({ prompt: "Return exactly: ASIDE_AGY_OK", mode: "oracle", model: "agy" });
+    assert.equal(rejected.status, "error");
+    assert.match(rejected.notes?.[0] ?? "", /400/);
+    assert.equal(agy.calls.length, 0);
   });
 
   await withServer(new GeminiRouter([web]), undefined, async (base) => {
@@ -188,7 +184,7 @@ test("OpenAI server pins model agy to the agy backend for GeminiWebProvider", as
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ model: "agy", messages: [{ role: "user", content: "q" }] }),
     });
-    assert.equal(response.status, 502);
+    assert.equal(response.status, 400);
     assert.equal(web.calls.length, 0);
   });
 });

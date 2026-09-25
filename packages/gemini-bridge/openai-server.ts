@@ -6,9 +6,9 @@ import type { GeminiBackendId } from "./types.js";
 /**
  * OpenAI-compatible façade over the Gemini router.
  *
- * Model ids: "gemini-web" keeps the current Gemini mode; "gemini-web:<mode>"
- * selects a visible mode label first (e.g. "gemini-web:pro"); "agy" pins the
- * Antigravity CLI backend with no fallback to Gemini Web.
+  * Model ids: "gemini-web" keeps the current Gemini mode; "gemini-web:<mode>"
+ * selects a visible mode label first (e.g. "gemini-web:pro"). The Antigravity
+ * provider is served separately on port 8765 and is not exposed here.
  * Each request starts a new Gemini chat; prior turns are sent as a transcript.
  */
 
@@ -18,6 +18,7 @@ export interface OpenAIServerOptions {
   /** Extra model ids to advertise, e.g. ["gemini-web:pro", "gemini-web:thinking"]. */
   modes?: readonly string[];
   maxBodyBytes?: number;
+  port?: number;
 }
 
 interface ChatMessage {
@@ -26,7 +27,6 @@ interface ChatMessage {
 }
 
 const BASE_MODEL = "gemini-web";
-const AGY_MODEL = "agy";
 
 export function messageText(content: unknown): string {
   if (typeof content === "string") return content;
@@ -54,7 +54,6 @@ export function messagesToPrompt(messages: readonly ChatMessage[]): string {
 
 export function parseModel(model: unknown): { id: string; mode?: string; backend?: GeminiBackendId } {
   const id = typeof model === "string" && model.trim() ? model.trim() : BASE_MODEL;
-  if (id === AGY_MODEL) return { id, backend: "agy" };
   const match = /^gemini-web:(.+)$/.exec(id);
   return match?.[1] ? { id, mode: match[1] } : { id };
 }
@@ -99,7 +98,6 @@ export function createOpenAIServer(options: OpenAIServerOptions): Server {
   const models = [
     BASE_MODEL,
     ...(options.modes ?? []).map((mode) => `${BASE_MODEL}:${mode}`),
-    ...(options.router.backends.some((backend) => backend.id === "agy") ? [AGY_MODEL] : []),
   ];
 
   return createServer((req, res) => {
@@ -120,7 +118,7 @@ export function createOpenAIServer(options: OpenAIServerOptions): Server {
       });
     }
     if (req.method === "GET" && path === "/health") {
-      return sendJson(res, 200, { backends: await options.router.status() });
+      return sendJson(res, 200, { service: "aside-gpt-gemini-web-bridge", port: options.port ?? 8766, backends: await options.router.status() });
     }
     if (req.method !== "POST" || path !== "/v1/chat/completions") {
       return sendError(res, 404, `no route for ${req.method} ${path}`);
@@ -138,6 +136,9 @@ export function createOpenAIServer(options: OpenAIServerOptions): Server {
     const prompt = messagesToPrompt(body.messages as ChatMessage[]);
     if (!prompt.trim() || prompt === "Assistant:") return sendError(res, 400, "messages contain no text");
     const { id: model, mode, backend } = parseModel(body.model);
+    if (model !== "gemini-web" && !/^gemini-web:.+/.test(model)) {
+      return sendError(res, 400, `unsupported model: ${model}; this bridge only serves gemini-web models`);
+    }
     const completionId = `chatcmpl-${randomUUID()}`;
     const created = Math.floor(Date.now() / 1000);
 

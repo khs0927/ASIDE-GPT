@@ -115,7 +115,7 @@ async function main(argv: string[]): Promise<number> {
         return 2;
       }
       const router = new GeminiRouter(buildBackends(config));
-      const server = createOpenAIServer({ router, apiKey: config.apiKey, modes: ["pro", "thinking", "fast"] });
+      const server = createOpenAIServer({ router, apiKey: config.apiKey, port: config.serverPort, modes: ["pro", "thinking", "fast"] });
       server.listen(port, host, () => log(`OpenAI-compatible Gemini bridge on http://${host}:${port}/v1 (backends: ${config.backends.join(" → ")})`));
       await new Promise<void>((resolve) => {
         const stop = () => server.close(() => resolve());

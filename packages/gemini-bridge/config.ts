@@ -57,7 +57,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BridgeConfig {
       throw new Error(`ASIDE_GEMINI_BACKENDS: unknown backend "${id}" (use ${BACKEND_IDS.join(", ")})`);
     }
   }
-  const chromePort = int(env.ASIDE_GEMINI_CHROME_PORT, 9222, "ASIDE_GEMINI_CHROME_PORT");
+  const chromePort = int(env.ASIDE_GEMINI_CHROME_PORT, 9223, "ASIDE_GEMINI_CHROME_PORT");
   return {
     backends: backends as GeminiBackendId[],
     cdpUrl: env.ASIDE_GEMINI_CDP_URL ?? `http://127.0.0.1:${chromePort}`,
