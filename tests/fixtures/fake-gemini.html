@@ -1,0 +1,91 @@
+<!doctype html>
+<!--
+  Minimal stand-in for gemini.google.com used by tests/browser/.
+  It mirrors only the DOM hooks listed in packages/gemini-bridge/selectors.ts.
+-->
+<html>
+  <head>
+    <meta charset="utf-8" />
+    <title>Gemini</title>
+    <style>
+      .hidden { display: none; }
+      [role="menu"] { border: 1px solid #ccc; }
+    </style>
+  </head>
+  <body>
+    <div data-test-id="new-chat-button"><a href="./app" aria-label="New chat">New chat</a></div>
+    <button data-test-id="bard-mode-menu-button" id="picker">Fast</button>
+    <div role="menu" id="menu" class="hidden">
+      <div role="menuitemradio">Fast</div>
+      <div role="menuitemradio">Thinking</div>
+      <div role="menuitemradio">Pro</div>
+    </div>
+    <main id="chat"></main>
+    <rich-textarea><div class="ql-editor" contenteditable="true" role="textbox"></div></rich-textarea>
+    <input type="file" multiple class="hidden" id="files" />
+    <button class="send-button" aria-label="Send message" id="send">Send</button>
+    <button aria-label="Stop response" id="stop" class="hidden">Stop</button>
+    <script>
+      const picker = document.getElementById("picker");
+      const menu = document.getElementById("menu");
+      const editor = document.querySelector(".ql-editor");
+      const chat = document.getElementById("chat");
+      const stop = document.getElementById("stop");
+      const files = document.getElementById("files");
+
+      picker.addEventListener("click", () => menu.classList.toggle("hidden"));
+      for (const item of menu.children) {
+        item.addEventListener("click", () => {
+          picker.textContent = item.textContent;
+          menu.classList.add("hidden");
+        });
+      }
+
+      const RICH = [
+        "<h2>Plan</h2>",
+        "<p>Use <strong>bold</strong> and <code>inline()</code> here.</p>",
+        '<code-block><div class="code-block-decoration"><span>Python</span></div>',
+        '<pre><code class="language-python">def f(x):\n    return x * 2\n</code></pre></code-block>',
+        "<ul><li>first<ul><li>nested</li></ul></li><li>second</li></ul>",
+        "<table><thead><tr><th>Name</th><th>Score</th></tr></thead>",
+        "<tbody><tr><td>a|b</td><td>1</td></tr><tr><td>c</td><td>2</td></tr></tbody></table>",
+        '<p>See <a href="https://example.com/doc">the doc</a>.</p>',
+      ].join("");
+
+      function answerFor(prompt) {
+        if (prompt.includes("LIMIT")) return { html: "<p>You've reached your limit. Try again later.</p>", plain: "You've reached your limit." };
+        if (prompt.includes("RICH")) return { html: RICH, plain: "Plan Use bold and inline here" };
+        const attached = Array.from(files.files).map((f) => f.name).join(",");
+        const text = "ECHO: " + prompt + " [mode: " + picker.textContent + "]" + (attached ? " [files: " + attached + "]" : "");
+        return { html: "<p>" + text + "</p>", plain: text };
+      }
+
+      document.getElementById("send").addEventListener("click", () => {
+        const prompt = editor.innerText.trim();
+        if (!prompt) return;
+        editor.textContent = "";
+        if (!/\/app\/./.test(location.pathname)) history.pushState({}, "", location.pathname.replace(/\/(?:app|gem\/[^/]+)$/, "") + "/app/c" + Date.now());
+        const user = document.createElement("user-query");
+        user.textContent = prompt;
+        const turn = document.createElement("model-response");
+        turn.innerHTML = '<message-content><div class="markdown"></div></message-content>';
+        chat.append(user, turn);
+        const body = turn.querySelector(".markdown");
+        const answer = answerFor(prompt);
+        const words = answer.plain.split(" ");
+        stop.classList.remove("hidden");
+        let i = 0;
+        const tick = setInterval(() => {
+          i += 1;
+          body.innerHTML = "<p>" + words.slice(0, i).join(" ") + "</p>";
+          if (i >= words.length) {
+            clearInterval(tick);
+            body.innerHTML = answer.html;
+            files.value = "";
+            stop.classList.add("hidden");
+          }
+        }, 40);
+      });
+    </script>
+  </body>
+</html>

@@ -1,19 +1,22 @@
 {
   "name": "aside-gpt",
-  "version": "0.2.0",
+  "version": "0.4.0",
   "private": true,
-  "description": "Aside-first mobile connector, policy, and durable task runtime.",
+  "description": "Local-first Aside orchestrator with a Gemini Web bridge, durable task runtime, and future Aside Remote boundary.",
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "node --import tsx --test tests/*.test.ts",
     "check:skills": "node --import tsx scripts/validate-skills.ts",
-    "ci": "npm run typecheck && npm test && npm run check:skills && npm run build"
+    "ci": "npm run typecheck && npm test && npm run check:skills && npm run build",
+    "test:browser": "node --import tsx --test tests/browser/*.test.ts",
+    "cli": "node --import tsx packages/gemini-bridge/cli.ts"
   },
   "engines": {
     "node": ">=22.13.0"
   },
   "dependencies": {
+    "playwright-core": "1.56.1",
     "xstate": "5.32.6",
     "zod": "4.6.2"
   },
@@ -21,5 +24,8 @@
     "@types/node": "^22.0.0",
     "tsx": "^4.19.0",
     "typescript": "^5.8.0"
+  },
+  "bin": {
+    "aside-gpt": "dist/packages/gemini-bridge/cli.js"
   }
 }

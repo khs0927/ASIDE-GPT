@@ -24,7 +24,22 @@ jobs:
           name: Build
           command: npm run build
 
+  browser:
+    docker:
+      - image: cimg/node:22.13-browsers
+    steps:
+      - checkout
+      - node/install-packages:
+          pkg-manager: npm
+      - run:
+          name: Install the Chromium build pinned by playwright-core
+          command: npx playwright-core install chromium
+      - run:
+          name: Gemini Web bridge against the fixture page
+          command: npm run test:browser
+
 workflows:
   ci:
     jobs:
       - verify
+      - browser
