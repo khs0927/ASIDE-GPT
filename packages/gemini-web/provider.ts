@@ -51,7 +51,7 @@ export class GeminiWebProvider {
       fetchImpl?: typeof fetch;
       timeoutMs?: number;
     } = {
-      baseUrl: options.baseUrl ?? "http://127.0.0.1:8765/v1",
+      baseUrl: options.baseUrl ?? "http://127.0.0.1:8766/v1",
     };
     if (options.fetchImpl !== undefined) clientOptions.fetchImpl = options.fetchImpl;
     if (options.timeoutMs !== undefined) clientOptions.timeoutMs = options.timeoutMs;
