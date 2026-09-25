@@ -24,7 +24,7 @@ const USAGE = `aside-gpt — local Gemini bridge for ASIDE-GPT
 Usage:
   aside-gpt chrome                     Launch Chrome with the dedicated Gemini profile
   aside-gpt ask <prompt> [--mode Pro] [--file path]... [--gem id] [--continue url] [--json]
-  aside-gpt serve [--port 8765]        OpenAI-compatible server at http://127.0.0.1:8765/v1
+  aside-gpt serve [--port 8766]        OpenAI-compatible server at http://127.0.0.1:8766/v1
   aside-gpt mcp                        stdio MCP server (gemini_ask, gemini_status)
   aside-gpt doctor                     Check Chrome, Gemini sign-in, agy, Aside, local model
   aside-gpt probe-aside [--script f]   Run one Aside REPL call and look for credit errors

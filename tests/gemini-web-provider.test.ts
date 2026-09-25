@@ -5,7 +5,7 @@ import { GeminiWebProvider } from "../packages/gemini-web/provider.js";
 test("Gemini Web provider preserves aside-gemini provenance", async () => {
   const calls: string[] = [];
   const provider = new GeminiWebProvider({
-    baseUrl: "http://127.0.0.1:8765/v1",
+    baseUrl: "http://127.0.0.1:8766/v1",
     model: "gemini-web:Pro",
     fetchImpl: async (input) => {
       const url = String(input);
@@ -22,7 +22,7 @@ test("Gemini Web provider preserves aside-gemini provenance", async () => {
           status: 200,
           headers: {
             "X-Backend": "gemini-web",
-            "X-Conversation-Url": "http://127.0.0.1:8765/conversation/abc",
+            "X-Conversation-Url": "http://127.0.0.1:8766/conversation/abc",
           },
         },
       );
@@ -43,18 +43,18 @@ test("Gemini Web provider preserves aside-gemini provenance", async () => {
   assert.equal(result.transport, "openai-compatible");
   assert.equal(result.status, "completed");
   assert.equal(result.response, "GEMINI_PROVIDER_OK");
-  assert.equal(result.conversationUrl, "http://127.0.0.1:8765/conversation/abc");
+  assert.equal(result.conversationUrl, "http://127.0.0.1:8766/conversation/abc");
   assert.equal(result.correlationId, "corr-1");
   assert.deepEqual(result.notes, ["server backend: gemini-web"]);
   assert.deepEqual(calls, [
-    "http://127.0.0.1:8765/v1/models",
-    "http://127.0.0.1:8765/v1/chat/completions",
+    "http://127.0.0.1:8766/v1/models",
+    "http://127.0.0.1:8766/v1/chat/completions",
   ]);
 });
 
 test("Gemini Web provider reports server unavailability as blocked", async () => {
   const provider = new GeminiWebProvider({
-    baseUrl: "http://127.0.0.1:8765/v1",
+    baseUrl: "http://127.0.0.1:8766/v1",
     fetchImpl: async () => new Response("unavailable", { status: 503 }),
   });
 

@@ -74,7 +74,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env): BridgeConfig {
     asideBin: env.ASIDE_BIN ?? "aside",
     asideReplArgs: args(env.ASIDE_REPL_ARGS, ["repl"]),
     serverHost: env.ASIDE_GEMINI_HOST ?? "127.0.0.1",
-    serverPort: int(env.ASIDE_GEMINI_PORT, 8765, "ASIDE_GEMINI_PORT"),
+    serverPort: int(env.ASIDE_GEMINI_PORT, 8766, "ASIDE_GEMINI_PORT"),
     apiKey: env.ASIDE_GEMINI_API_KEY || undefined,
     localModelUrl: env.ASIDE_LOCAL_MODEL_URL || undefined,
   };
