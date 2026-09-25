@@ -27,7 +27,7 @@ User goal
 
 Every direct request must include `model`. Use `jev-1.13-free` with OpenCode Zen and `jev-1.13.0` with TypeSafe direct access. A conversational prompt or a request without `model` is invalid and may return HTTP 401 or 422.
 
-The default model is `jev-1.13-free`. The default endpoint is `https://opencode.ai/zen/v1/systemone`. Anonymous Zen Free access was verified on 2026-09-24, but the official documentation describes the free model as limited-time. A production deployment should therefore support an authenticated endpoint and fail clearly if anonymous access is withdrawn.
+The default model is `jev-1.13-free`. The default endpoint is `https://opencode.ai/zen/v1/systemone`. Anonymous Zen Free access was verified on 2026-09-24 and re-verified on 2026-09-26 for all three question types at zero cost, but the official documentation still describes the free model as limited-time. A production deployment should therefore support an authenticated endpoint and fail clearly if anonymous access is withdrawn.
 
 For TypeSafe direct access, use:
 
