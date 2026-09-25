@@ -73,7 +73,7 @@ export class LocalModelClient {
     const normalizedUrl = assertLoopbackUrl(options.baseUrl).toString().replace(/\/$/, "");
     this.baseUrl = normalizedUrl.endsWith("/v1") ? normalizedUrl.slice(0, -3) : normalizedUrl;
     this.fetchImpl = options.fetchImpl ?? fetch;
-    this.timeoutMs = options.timeoutMs ?? 30_000;
+    this.timeoutMs = options.timeoutMs ?? 180_000;
     if (!Number.isInteger(this.timeoutMs) || this.timeoutMs <= 0) {
       throw new LocalModelError("timeoutMs must be a positive integer", null);
     }
