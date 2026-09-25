@@ -15,14 +15,19 @@ BrowserBackend
 ReasoningProvider
   1. Ollama / LM Studio      local and API-key-free where available
   2. ChatGPT / Claude        existing subscription paths when host-supported
-  3. Gemini Web Oracle       bounded advisory subcall, never the main planner
+  3. agy                     Antigravity CLI subscription via the local bridge
+  4. Gemini Web Oracle       bounded advisory subcall, never the main planner
 
 GeminiTransport
-  1. mcp-web-llm             primary MCP web-model transport candidate
-  2. Aside REPL              official transport fallback and smoke test
-  3. hermes-gem-pw           Gemini-specific workflows
-  4. gemini-web2api-go       experimental, explicit opt-in only
+  1. gemini-web-cdp          built-in bridge (packages/gemini-bridge), dedicated Chrome profile over loopback CDP
+  2. antigravity-cli         official agy CLI, automatic fallback in the bridge
+  3. mcp-web-llm             external MCP web-model router candidate
+  4. Aside REPL              official transport fallback and smoke test
+  5. hermes-gem-pw           Gemini-specific workflows
+  6. gemini-web2api-go       experimental, explicit opt-in only
 ```
+
+The built-in transports are runnable today: see [LOCAL_BRIDGE.md](LOCAL_BRIDGE.md) for `aside-gpt ask|serve|mcp|doctor|probe-aside|setup-agy`.
 
 The selection contracts live in `packages/browser-backend.ts`, `packages/reasoning-providers.ts`, and `packages/gemini-transports.ts`.
 
@@ -44,7 +49,7 @@ The selection contracts live in `packages/browser-backend.ts`, `packages/reasoni
 4. Test an external browser fallback only with explicit opt-in and verify its result is not labeled Aside execution.
 5. Keep the existing credential, approval, and evidence tests green.
 
-No endpoint, OAuth flow, cookie extraction, or reverse-engineered Gemini protocol is added by this change.
+No endpoint, OAuth flow, cookie extraction, or reverse-engineered Gemini protocol is added. The bridge operates only the visible Gemini page.
 
 ## Local model smoke path
 
@@ -96,5 +101,7 @@ const result = await provider.ask({
   model: "agy",
 });
 ```
+
+The built-in bridge (`aside-gpt serve`, see [LOCAL_BRIDGE.md](LOCAL_BRIDGE.md)) advertises `agy` on `/v1/models` when the agy backend is enabled and pins `model: "agy"` to that backend with no fallback to Gemini Web. Any other model id (`auto`, `gemini-web`, `gemini-web:<mode>`) follows the `ASIDE_GEMINI_BACKENDS` order.
 
 The host must install and authenticate `agy` separately. ASIDE-GPT records the execution provenance as `aside-gemini`, not as a built-in Aside model.
