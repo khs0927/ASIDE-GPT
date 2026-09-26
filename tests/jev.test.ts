@@ -147,3 +147,34 @@ test("Jev provider surfaces HTTP errors with a bounded response body", async () 
     },
   );
 });
+
+test("Jev provider falls back to TypeSafe direct access when Zen Free returns 401 and apiKey is present", async () => {
+  const requests: { url: string; headers: Record<string, string> }[] = [];
+  const provider = new JevDecisionProvider({
+    apiKey: "typesafe-key-123",
+    fetchImpl: async (input, init) => {
+      requests.push({
+        url: String(input),
+        headers: (init?.headers ?? {}) as Record<string, string>,
+      });
+      if (requests.length === 1) {
+        return new Response("free tier retired", { status: 401 });
+      }
+      return new Response(JSON.stringify(responseBody), {
+        status: 200,
+        headers: { "Content-Type": "application/json" },
+      });
+    },
+  });
+
+  const result = await provider.decide("state", {
+    urgent: { type: "noul", instructions: "Urgent?" },
+  });
+
+  assert.equal(requests.length, 2);
+  assert.equal(requests[0]?.url, JEV_ZEN_ENDPOINT);
+  assert.equal(requests[1]?.url, JEV_TYPESAFE_ENDPOINT);
+  assert.equal(requests[1]?.headers.Authorization, "Bearer typesafe-key-123");
+  assert.equal(result.answers.is_urgent?.type, "noul");
+});
+

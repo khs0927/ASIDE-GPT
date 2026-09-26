@@ -129,8 +129,10 @@ function assertQuestions(questions: JevQuestions): void {
  * explain, retrieve, calculate, and perform external actions.
  */
 export class JevDecisionProvider {
-  private readonly endpoint: string;
-  private readonly model: string;
+  // Mutable so a successful free-to-direct fallback can pin the provider to the
+  // endpoint that actually answered, instead of retrying the dead one every call.
+  private endpoint: string;
+  private model: string;
   private readonly apiKey: string | undefined;
   private readonly timeoutMs: number;
   private readonly fetchImpl: typeof fetch;
@@ -156,18 +158,50 @@ export class JevDecisionProvider {
       headers.Authorization = `Bearer ${this.apiKey}`;
     }
 
-    const response = await this.fetchImpl(this.endpoint, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({ model: this.model, state, questions }),
-      signal: AbortSignal.timeout(this.timeoutMs),
-    });
-    const responseBody = await response.text();
+    const post = async (
+      endpoint: string,
+      model: string,
+      requestHeaders: Record<string, string>,
+    ): Promise<{ ok: boolean; status: number; body: string }> => {
+      const res = await this.fetchImpl(endpoint, {
+        method: "POST",
+        headers: requestHeaders,
+        body: JSON.stringify({ model, state, questions }),
+        signal: AbortSignal.timeout(this.timeoutMs),
+      });
+      return { ok: res.ok, status: res.status, body: await res.text() };
+    };
 
-    if (!response.ok) {
+    // Primary path: the anonymous Zen Free endpoint, which is free-first by default.
+    let attempt = await post(this.endpoint, this.model, headers);
+
+    // Fallback: if the free endpoint stops serving anonymous traffic, retry once
+    // against the authenticated TypeSafe endpoint, but only when a key is available.
+    // Never switch endpoints when the caller pinned a specific endpoint/model.
+    if (
+      !attempt.ok &&
+      this.apiKey &&
+      this.endpoint === JEV_ZEN_ENDPOINT &&
+      this.model === JEV_ZEN_FREE_MODEL &&
+      (attempt.status === 401 || attempt.status === 403 || attempt.status === 404 || attempt.status === 422)
+    ) {
+      const fallbackHeaders: Record<string, string> = {
+        ...headers,
+        Authorization: `Bearer ${this.apiKey}`,
+      };
+      attempt = await post(JEV_TYPESAFE_ENDPOINT, JEV_TYPESAFE_MODEL, fallbackHeaders);
+      if (attempt.ok) {
+        this.endpoint = JEV_TYPESAFE_ENDPOINT;
+        this.model = JEV_TYPESAFE_MODEL;
+      }
+    }
+
+    const responseBody = attempt.body;
+
+    if (!attempt.ok) {
       throw new JevApiError(
-        `Jev request failed with HTTP ${response.status} for model ${this.model}`,
-        response.status,
+        `Jev request failed with HTTP ${attempt.status} for model ${this.model}`,
+        attempt.status,
         responseBody.slice(0, 2_000),
         this.endpoint,
         this.model,

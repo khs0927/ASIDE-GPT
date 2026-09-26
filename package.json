@@ -6,11 +6,11 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "test": "node --import tsx --test tests/*.test.ts",
-    "check:skills": "node --import tsx scripts/validate-skills.ts",
-    "ci": "npm run typecheck && npm test && npm run check:skills && npm run build",
+    "test": "npm run build && node --test dist/tests/*.test.js",
+    "check:skills": "npm run build && node dist/scripts/validate-skills.js",
+    "ci": "npm run typecheck && npm test && npm run check:skills",
     "test:browser": "node --import tsx --test tests/browser/*.test.ts",
-    "cli": "node --import tsx packages/gemini-bridge/cli.ts"
+    "cli": "node dist/packages/gemini-bridge/cli.js"
   },
   "engines": {
     "node": ">=22.13.0"
