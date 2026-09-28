@@ -53,9 +53,11 @@ export function messagesToPrompt(messages: readonly ChatMessage[]): string {
 }
 
 export function parseModel(model: unknown): { id: string; mode?: string; backend?: GeminiBackendId } {
-  const id = typeof model === "string" && model.trim() ? model.trim() : BASE_MODEL;
+  const id = typeof model === "string" && model.trim() ? model.trim() : "auto";
+  if (id === "auto" || id === BASE_MODEL) return { id: BASE_MODEL, backend: "gemini-web" };
+  if (id === AGY_MODEL) return { id, backend: "agy" };
   const match = /^gemini-web:(.+)$/.exec(id);
-  return match?.[1] ? { id, mode: match[1] } : { id };
+  return match?.[1] ? { id, mode: match[1], backend: "gemini-web" } : { id };
 }
 
 function sendJson(res: ServerResponse, status: number, body: unknown): void {
@@ -96,6 +98,7 @@ function authorized(req: IncomingMessage, apiKey: string | undefined): boolean {
 export function createOpenAIServer(options: OpenAIServerOptions): Server {
   const maxBody = options.maxBodyBytes ?? 4 * 1024 * 1024;
   const models = [
+    "auto",
     BASE_MODEL,
     ...(options.modes ?? []).map((mode) => `${BASE_MODEL}:${mode}`),
   ];
