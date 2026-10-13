@@ -44,17 +44,27 @@ async function withServer(handler, fn) {
   }
 }
 
-test("verify accepts three live 200 readiness checks", async () => {
+const discovered = {
+  schema_version: 1, component: "mcp", status: "ok", state: "discovered",
+  details: {
+    channel: "main", transport: "stdio", child_state: "running",
+    evidence: "same_child",
+    initialize: { ok: true },
+    tools_list: { ok: true, complete: true, limited: false, partial: false, tool_names: ["aside_read"] },
+  }
+};
+
+test("verify succeeds only after same-child MCP tools/list is fully observed", async () => {
   const f = mockBinaries();
   try {
     await withServer((req, res) => {
       res.writeHead(["/healthz", "/readyz", "/health/mcp"].includes(req.url) ? 200 : 404);
-      res.end("{}");
+      res.end(req.url === "/health/mcp" ? JSON.stringify(discovered) : "{}");
     }, async (url) => {
       const r = await invoke(f, url);
       assert.equal(r.code, 0, r.err);
       assert.match(r.out, /READINESS_VERIFIED/);
-      assert.match(r.out, /TUNNEL_HEALTH_OK \/health\/mcp HTTP 200/);
+      assert.match(r.out, /MCP_DISCOVERY_VERIFIED main stdio/);
     });
   } finally { rmSync(f.dir, { recursive: true, force: true }); }
 });
@@ -71,6 +81,26 @@ test("verify rejects missing MCP discovery even if process and readyz are alive"
     });
   } finally { rmSync(f.dir, { recursive: true, force: true }); }
 });
+test("verify rejects HTTP 200 for unobserved or partial tools/list", async () => {
+  const f = mockBinaries();
+  try {
+    for (const snapshot of [
+      { ...discovered, status: "unknown", state: "not_observed" },
+      { ...discovered, details: { ...discovered.details, tools_list: { ...discovered.details.tools_list, complete: false, partial: true } } },
+      { ...discovered, details: { ...discovered.details, evidence: "not_same_child" } },
+    ]) {
+      await withServer((req, res) => {
+        res.writeHead(200);
+        res.end(req.url === "/health/mcp" ? JSON.stringify(snapshot) : "{}");
+      }, async (url) => {
+        const result = await invoke(f, url);
+        assert.equal(result.code, 1);
+        assert.match(result.err, /MCP_DISCOVERY_NOT_VERIFIED/);
+      });
+    }
+  } finally { rmSync(f.dir, { recursive: true, force: true }); }
+});
+
 test("verify rejects external health endpoints without making a request", async () => {
   const f = mockBinaries();
   try {
