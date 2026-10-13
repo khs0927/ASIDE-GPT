@@ -62,7 +62,7 @@ if (mode === "init") {
     "--profile", profile, "--tunnel-id", id, "--mcp-command", cmd
   ]);
   console.log("PROFILE_CREATED: run doctor before connecting the ChatGPT plugin.");
- } else if (mode === "verify") {
+} else if (mode === "verify") {
   const raw = process.env.ASIDE_TUNNEL_HEALTH_URL;
   if (!raw) fail("ASIDE_TUNNEL_HEALTH_URL must be a loopback http://127.0.0.1:<port> URL.");
   let base;
@@ -73,7 +73,7 @@ if (mode === "init") {
       base.pathname !== "/") {
     fail("Tunnel health checks must use loopback HTTP only with no credentials or query.");
   }
-  for (const path of ["/healthz", "/readyz", "/health/mcp"]) {
+  async function health(path) {
     let resp;
     try {
       resp = await fetch(new URL(path, base), {
@@ -81,9 +81,31 @@ if (mode === "init") {
       });
     } catch { fail(path + " not reachable on loopback."); }
     if (resp.status !== 200) fail(path + " returned HTTP " + resp.status + ".");
-    console.log("TUNNEL_HEALTH_OK " + path + " HTTP 200");
+    return resp;
   }
-  console.log("READINESS_VERIFIED: live MCP discovery health is 200; a real Aside browser tool call is still required.");
+  await health("/healthz");
+  await health("/readyz");
+  let snapshot;
+  try {
+    snapshot = await (await health("/health/mcp")).json();
+  } catch { fail("/health/mcp did not return a valid JSON discovery snapshot."); }
+  const toolsList = snapshot?.details?.tools_list;
+  if (snapshot?.component !== "mcp" ||
+      snapshot?.status !== "ok" || snapshot?.state !== "discovered" ||
+      snapshot?.details?.channel !== "main" ||
+      snapshot?.details?.transport !== "stdio" ||
+      snapshot?.details?.child_state !== "running" ||
+      snapshot?.details?.evidence !== "same_child" ||
+      toolsList?.ok !== true || toolsList?.complete !== true ||
+      toolsList?.partial === true || toolsList?.limited === true ||
+      !Array.isArray(toolsList?.tool_names) || toolsList.tool_names.length < 1 ||
+      !(snapshot.details.initialize?.ok === true ||
+        snapshot.details.server_discover?.ok === true)) {
+    fail("MCP_DISCOVERY_NOT_VERIFIED: need discovered same-child stdio main tools/list evidence, not HTTP 200 alone.");
+  }
+  console.log("TUNNEL_HEALTH_OK /healthz and /readyz HTTP 200");
+  console.log("MCP_DISCOVERY_VERIFIED main stdio: " + toolsList.tool_names.length + " retained tool names.");
+  console.log("READINESS_VERIFIED: actual Aside browser action and user OAuth still require live end-to-end verification.");
 } else if (mode === "doctor") {
   runChecked(["doctor", "--profile", profile, "--explain"]);
   console.log("DOCTOR_OK: now test /readyz and ChatGPT MCP tool discovery.");
