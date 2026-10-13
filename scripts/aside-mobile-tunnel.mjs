@@ -3,7 +3,7 @@
 import { spawn, spawnSync } from "node:child_process";
 
 const mode = process.argv[2] ?? "preflight";
-const validModes = new Set(["preflight", "init", "doctor", "run"]);
+const validModes = new Set(["preflight", "init", "doctor", "run", "verify"]);
 const aside = process.env.ASIDE_BIN || "aside";
 const tunnel = process.env.TUNNEL_CLIENT_BIN || "tunnel-client";
 const profile = process.env.ASIDE_TUNNEL_PROFILE || "aside-mobile";
@@ -12,7 +12,7 @@ function fail(message) {
   console.error("BLOCKED: " + message);
   process.exit(1);
 }
-if (!validModes.has(mode)) fail("Mode must be preflight, init, doctor, or run.");
+if (!validModes.has(mode)) fail("Mode must be preflight, init, doctor, run, or verify.");
 if (!/^[a-zA-Z0-9_-]{1,64}$/.test(profile)) fail("Invalid profile name.");
 if (aside.includes("\n") || aside.includes('"')) fail("Unsafe ASIDE_BIN path.");
 
@@ -62,6 +62,28 @@ if (mode === "init") {
     "--profile", profile, "--tunnel-id", id, "--mcp-command", cmd
   ]);
   console.log("PROFILE_CREATED: run doctor before connecting the ChatGPT plugin.");
+ } else if (mode === "verify") {
+  const raw = process.env.ASIDE_TUNNEL_HEALTH_URL;
+  if (!raw) fail("ASIDE_TUNNEL_HEALTH_URL must be a loopback http://127.0.0.1:<port> URL.");
+  let base;
+  try { base = new URL(raw); } catch { fail("Malformed tunnel health URL."); }
+  if (base.protocol !== "http:" ||
+      !["127.0.0.1", "localhost", "[::1]"].includes(base.hostname) ||
+      base.username || base.password || base.search || base.hash ||
+      base.pathname !== "/") {
+    fail("Tunnel health checks must use loopback HTTP only with no credentials or query.");
+  }
+  for (const path of ["/healthz", "/readyz", "/health/mcp"]) {
+    let resp;
+    try {
+      resp = await fetch(new URL(path, base), {
+        method: "GET", redirect: "error", signal: AbortSignal.timeout(5000)
+      });
+    } catch { fail(path + " not reachable on loopback."); }
+    if (resp.status !== 200) fail(path + " returned HTTP " + resp.status + ".");
+    console.log("TUNNEL_HEALTH_OK " + path + " HTTP 200");
+  }
+  console.log("READINESS_VERIFIED: live MCP discovery health is 200; a real Aside browser tool call is still required.");
 } else if (mode === "doctor") {
   runChecked(["doctor", "--profile", profile, "--explain"]);
   console.log("DOCTOR_OK: now test /readyz and ChatGPT MCP tool discovery.");
