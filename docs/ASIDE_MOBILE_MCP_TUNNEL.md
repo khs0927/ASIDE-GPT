@@ -23,7 +23,9 @@
     node scripts/aside-mobile-tunnel.mjs doctor
     node scripts/aside-mobile-tunnel.mjs run
 
-7. When the official tunnel-client reports readiness and its /readyz endpoint is healthy, register the tunnel in ChatGPT settings → Plugins/Connectors. Verify MCP discovery, one read-only Aside action, then one explicit-approval non-destructive action. Do not infer browser readiness from plugin visibility alone.
+7. With tunnel-client running, identify its **local** health listener from the CLI or its health URL file. Point `ASIDE_TUNNEL_HEALTH_URL` only at that loopback address (for example `http://127.0.0.1:12345`). In a second terminal run `node scripts/aside-mobile-tunnel.mjs verify` with the same Aside credentials and runtime key. This validates HTTP 200 for `/healthz`, `/readyz`, and `/health/mcp` without exposing the local diagnostics endpoint. HTTP 200 is NOT proof that a browser tab was controlled.
+8. Register the tunnel endpoint in ChatGPT settings → Plugins/Connectors. Verify MCP discovery, one real read-only Aside browser action (with timestamps and screenshot/artifact evidence), then one explicit-approval non-destructive action. Do not infer browser readiness from plugin visibility alone.
+9. Only after Android/iPhone tool invocation, device restart recovery, user-scoped OAuth/permission checks, and actual Aside evidence are verified can the project be considered operational.
 
 The helper intentionally runs the tunnel-client in the FOREGROUND; it does not create a persistent OS service, persist secrets, or modify account permissions. For production keep the Aside browser alive and supervise the tunnel with the host's trusted service manager. Do not expose its health or administrative interface publicly.
 
@@ -44,3 +46,7 @@ A Linux VPS can manage policy, queues, audited tasks, approvals, and existing Je
 
 ## Evidence
 The new Node tests cover missing tunnel keys, signed-out Aside, preflight, and no API key in CLI arguments. No successful OpenAI tunnel, connected Aside daemon, verified VPS browser execution, or iPhone tool call is claimed by these tests.
+
+## Hosted CLI credential storage
+
+As of the Aside developer documentation checked on 2026-10-14, an **official CLI login on a different computer or assistant-hosted environment** may use a private absolute `ASIDE_CLI_AUTH_PATH` that remains stable across runs. The supported login sequence is `aside login --email ...` with device approval through **Aside Settings → Account → Devices**; use the same absolute auth path on subsequent CLI runs. Do not assume that CLI login alone installs or starts an Aside browser runtime on Linux, and do not store the credentials in Git. Source: https://docs.aside.com/help/developers .
