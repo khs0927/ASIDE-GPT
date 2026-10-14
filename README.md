@@ -26,6 +26,10 @@ aside-gpt probe-aside                    # measure whether Aside REPL calls hit 
 
 Aside's model settings do not document Ollama/LM Studio/custom endpoints, so Gemini cannot run *inside* Aside today. Instead Gemini (through `agy` or any MCP host) drives Aside as a tool via `aside mcp`, and calls `gemini_ask` for a second opinion. Details, configuration, security boundaries, and what is not yet verified against production: [docs/LOCAL_BRIDGE.md](docs/LOCAL_BRIDGE.md). Runtime selection rules: [docs/VNEXT_RUNTIME.md](docs/VNEXT_RUNTIME.md).
 
+## Mobile ChatGPT: official MCP tunnel while an Aside host is online
+
+A verified-by-mocks integration helper for the **official** Aside stdio MCP via OpenAI Secure MCP Tunnel is available at [docs/ASIDE_MOBILE_MCP_TUNNEL.md](docs/ASIDE_MOBILE_MCP_TUNNEL.md). It never copies browser cookies, credentials, or invents an Aside endpoint. The user-facing ChatGPT interface can be mobile, but the Aside Browser daemon **must remain online on a supported execution host**. This is **not** the PC-free official Remote track below and is not yet live-tested. See Draft PR #26 for CI and remaining activation gates.
+
 ## Aside Remote (future track)
 
 The original goal — run Aside from mobile ChatGPT without a PC online — still depends on Aside publishing its remote contract. That track is kept, fail-closed, below.

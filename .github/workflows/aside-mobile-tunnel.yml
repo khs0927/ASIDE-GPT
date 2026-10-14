@@ -1,0 +1,26 @@
+name: Aside mobile secure MCP preflight
+on:
+  push:
+    paths:
+      - "scripts/aside-mobile-tunnel.mjs"
+      - "tests/aside-mobile-tunnel.test.mjs"
+      - "tests/aside-mobile-health.test.mjs"
+      - ".github/workflows/aside-mobile-tunnel.yml"
+  pull_request:
+    paths:
+      - "scripts/aside-mobile-tunnel.mjs"
+      - "tests/aside-mobile-tunnel.test.mjs"
+      - "tests/aside-mobile-health.test.mjs"
+      - ".github/workflows/aside-mobile-tunnel.yml"
+permissions:
+  contents: read
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - run: node --check scripts/aside-mobile-tunnel.mjs
+      - run: node --test tests/aside-mobile-*.test.mjs
