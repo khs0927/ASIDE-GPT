@@ -24,7 +24,7 @@ aside-gpt setup-agy                      # let Antigravity use Aside (aside mcp)
 aside-gpt probe-aside                    # measure whether Aside REPL calls hit credit limits
 ```
 
-Aside's model settings do not document Ollama/LM Studio/custom endpoints, so Gemini cannot run *inside* Aside today. Instead Gemini (through `agy` or any MCP host) drives Aside as a tool via `aside mcp`, and calls `gemini_ask` for a second opinion. Details, configuration, security boundaries, and what is not yet verified against production: [docs/LOCAL_BRIDGE.md](docs/LOCAL_BRIDGE.md). Runtime selection rules: [docs/VNEXT_RUNTIME.md](docs/VNEXT_RUNTIME.md).
+Aside's public model settings do not document arbitrary custom endpoints. AIMI documents a community-observed `models.json` provider route, which still requires native tool-call and live Aside browser E2E verification. Until then, Gemini may drive Aside via `aside mcp` and use `gemini_ask` for advisory results. See [docs/ASIDE_GEMINI_VERIFIED_INTEGRATION.md](docs/ASIDE_GEMINI_VERIFIED_INTEGRATION.md), [docs/LOCAL_BRIDGE.md](docs/LOCAL_BRIDGE.md), and [docs/VNEXT_RUNTIME.md](docs/VNEXT_RUNTIME.md).
 
 ## Aside Remote (future track)
 

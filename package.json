@@ -8,9 +8,11 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test dist/tests/*.test.js",
     "check:skills": "npm run build && node dist/scripts/validate-skills.js",
-    "ci": "npm run typecheck && npm test && npm run check:skills",
+    "ci": "npm run typecheck && npm test && npm run check:skills && npm run test:aside-registration",
     "test:browser": "node --import tsx --test tests/browser/*.test.ts",
-    "cli": "node dist/packages/gemini-bridge/cli.js"
+    "cli": "node dist/packages/gemini-bridge/cli.js",
+    "test:aside-registration": "node --test tests/setup-aside-gemini.test.mjs",
+    "aside:gemini": "node scripts/setup-aside-gemini.mjs"
   },
   "engines": {
     "node": ">=22.13.0"

@@ -6,10 +6,10 @@
 
 Two premises of the earlier plan did not hold when re-checked against official material:
 
-- Aside's model settings offer Aside's own models, subscriptions (ChatGPT, Claude, Copilot), and API keys. Ollama, LM Studio, or a custom OpenAI-compatible URL are not documented, so Gemini Web cannot become the model *inside* Aside today.
-- Gemini CLI no longer accepts personal AI Pro sign-in (from 2026-06-18); those users are pointed to the Antigravity CLI (`agy`).
+- Aside's public model settings do not document local custom endpoints. AIMI documents a community-observed `~/.aside/u/0/models.json` route, but this is not proof of Aside agent tool-call compatibility. The text-only Gemini Web bridge must not be registered as a proven browser-agent model.
+- Google currently documents personal Google account OAuth login for Gemini CLI (authentication documentation updated September 18, 2026). This is a separate credential and quota path from a signed-in `gemini.google.com` browser session.
 
-So instead of putting Gemini inside Aside, Gemini uses Aside as a tool:
+The existing design allows Gemini to use Aside as a tool. An OAuth-backed OpenAI-compatible proxy is an additional, gated Aside custom-provider candidate:
 
 ```text
 agy / any MCP host  ── reasoning (Gemini, AI Pro)

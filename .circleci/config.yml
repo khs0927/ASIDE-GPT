@@ -18,6 +18,9 @@ jobs:
           name: Test
           command: npm test
       - run:
+          name: Gemini provider registration contract (fixture only)
+          command: npm run test:aside-registration
+      - run:
           name: Validate skills
           command: npm run check:skills
       - run:
