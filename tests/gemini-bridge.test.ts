@@ -111,8 +111,10 @@ test("messages collapse into one prompt; model ids carry the mode", () => {
     ]),
     "System: be brief\n\nUser: hi\n\nAssistant:",
   );
-  assert.deepEqual(parseModel("gemini-web:pro"), { id: "gemini-web:pro", mode: "pro" });
-  assert.deepEqual(parseModel(undefined), { id: "gemini-web" });
+  assert.deepEqual(parseModel("auto"), { id: "gemini-web", backend: "gemini-web" });
+  assert.deepEqual(parseModel("gemini-web:pro"), { id: "gemini-web:pro", mode: "pro", backend: "gemini-web" });
+  assert.deepEqual(parseModel(undefined), { id: "gemini-web", backend: "gemini-web" });
+  assert.deepEqual(parseModel("agy"), { id: "agy" });
 });
 
 async function withServer(
@@ -139,7 +141,7 @@ test("OpenAI server lists models, completes, maps errors, and enforces the API k
     assert.equal((await fetch(`${base}/v1/models`)).status, 401);
 
     const models = (await (await fetch(`${base}/v1/models`, { headers })).json()) as { data: Array<{ id: string }> };
-    assert.deepEqual(models.data.map((model) => model.id), ["gemini-web", "gemini-web:pro"]);
+    assert.deepEqual(models.data.map((model) => model.id), ["auto", "gemini-web", "gemini-web:pro"]);
 
     const ok = await fetch(`${base}/v1/chat/completions`, {
       method: "POST",
@@ -164,12 +166,31 @@ test("OpenAI server lists models, completes, maps errors, and enforces the API k
   });
 });
 
+test("auto always selects Gemini Web, even when agy is first", async () => {
+  const agy = new FakeBackend("agy", () => ({ text: "from agy" }));
+  const web = new FakeBackend("gemini-web", () => ({ text: "from web" }));
+  await withServer(new GeminiRouter([agy, web]), undefined, async (base) => {
+    for (const model of ["auto", "gemini-web", "gemini-web:pro"]) {
+      const response = await fetch(`${base}/v1/chat/completions`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ model, messages: [{ role: "user", content: "probe" }] }),
+      });
+      assert.equal(response.status, 200);
+      const content = (await response.json()) as { choices: Array<{ message: { content: string } }> };
+      assert.equal(content.choices[0]?.message.content, "from web");
+    }
+  });
+  assert.equal(agy.calls.length, 0);
+  assert.equal(web.calls.length, 3);
+});
+
 test("OpenAI server rejects agy models on the Gemini Web bridge", async () => {
   const web = new FakeBackend("gemini-web", () => ({ text: "from web" }));
   const agy = new FakeBackend("agy", (request) => ({ text: `agy:${request.prompt}` }));
   await withServer(new GeminiRouter([web, agy]), undefined, async (base) => {
     const models = (await (await fetch(`${base}/v1/models`)).json()) as { data: Array<{ id: string }> };
-    assert.deepEqual(models.data.map((model) => model.id), ["gemini-web", "gemini-web:pro"]);
+    assert.deepEqual(models.data.map((model) => model.id), ["auto", "gemini-web", "gemini-web:pro"]);
 
     const provider = new GeminiWebProvider({ baseUrl: `${base}/v1` });
     const rejected = await provider.ask({ prompt: "Return exactly: ASIDE_AGY_OK", mode: "oracle", model: "agy" });

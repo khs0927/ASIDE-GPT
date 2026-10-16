@@ -18,7 +18,7 @@ npm ci && npm run build && npm link      # Windows: scripts\install.ps1
 aside-gpt chrome                         # dedicated Chrome profile; sign in to Gemini once
 aside-gpt doctor
 aside-gpt ask "Reply with only: ASIDE_GEMINI_OK"
-aside-gpt serve                          # OpenAI-compatible API at http://127.0.0.1:8765/v1
+aside-gpt serve                          # Gemini Web API at http://127.0.0.1:8766/v1
 aside-gpt mcp                            # MCP tools: gemini_ask, gemini_status
 aside-gpt setup-agy                      # let Antigravity use Aside (aside mcp) and Gemini Web together
 aside-gpt probe-aside                    # measure whether Aside REPL calls hit credit limits
